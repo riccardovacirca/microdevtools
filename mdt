@@ -348,17 +348,15 @@ EOF
 
 function service {
   CURRDIR=$(pwd)
-  if [ -d "${name}" ]; then
-    echo "Service '${name}' already exists."
-  fi
   if [[ -n $name ]]; then
-    mkdir -p ${name}
-    if test -e "${CURRDIR}/${name}/Makefile"; then
-      exit 0;
+    if [ -d "api/${name}" ]; then
+      echo "Service 'api/${name}' already exists."
+      exit 0
     fi
+    mkdir -p api/${name}
     if [ "$lang" = "objc" ]; then
-      if ! test -e "${CURRDIR}/${name}/main.m"; then
-        cat <<EOF > ${CURRDIR}/${name}/main.m
+      if ! test -e "${CURRDIR}/api/${name}/main.m"; then
+        cat <<EOF > ${CURRDIR}/api/${name}/main.m
 #import "microdevtools.h"
 int HelloWorldController(ns_service_t *s) {
   @autoreleasepool {
@@ -368,16 +366,19 @@ int HelloWorldController(ns_service_t *s) {
     return 200;
   }
 }
+
 void ns_handler(ns_service_t *s) {
   ns_route(s, "GET", "/api/hello", HelloWorldController);
 }
-ns_dbd_pool_t *dbd_pool;
+
 volatile sig_atomic_t server_run = 1;
 void ns_signal_exit(int signum) {
   if (signum == SIGTERM || signum == SIGINT) {
     server_run = 0;
   }
 }
+
+ns_dbd_pool_t *dbd_pool;
 int main(int argc, char **argv) {
   struct sigaction sig_action;
   ns_signal_handler(&sig_action, ns_signal_exit);
@@ -424,7 +425,7 @@ int main(int argc, char **argv) {
   return 0;
 }
 EOF
-        cat <<EOF > ${CURRDIR}/${name}/Makefile
+        cat <<EOF > ${CURRDIR}/api/${name}/Makefile
 HOST:=0.0.0.0
 PORT:=2310
 SSL_PORT:=2443
@@ -435,10 +436,10 @@ DBD_CONN_S:="host=localhost,port=3306,user=test,pass=test,dbname=test"
 CC:=clang
 #-DMG_TLS=MG_TLS_OPENSSL -D_TLS -D_TLS_TWOWAY
 CFLAGS:=-std=gnu99 -D_MONGOOSE -D_NATIVE_OBJC_EXCEPTIONS -fconstant-string-class=NSConstantString
-INCLUDES:=-I. -I../.tools -I../.tools/apr-2/include -I../.tools/json-c/include -I../.tools/mongoose -I../.tools/microdevtools -I \`gnustep-config --variable=GNUSTEP_SYSTEM_HEADERS\`
-LIBS:=-L../.tools/apr-2/lib -L../.tools/json-c/lib -L \`gnustep-config --variable=GNUSTEP_SYSTEM_LIBRARIES\`
+INCLUDES:=-I. -I../../.tools/apr-2/include -I../../.tools/json-c/include -I../../.tools/mongoose -I../../.tools/microdevtools -I \`gnustep-config --variable=GNUSTEP_SYSTEM_HEADERS\`
+LIBS:=-L../../.tools/apr-2/lib -L../../.tools/json-c/lib -L \`gnustep-config --variable=GNUSTEP_SYSTEM_LIBRARIES\`
 LDFLAGS:=-lapr-2 -ljson-c -lssl -lcrypto -lgnustep-base -lobjc
-SRC:=../.tools/mongoose/mongoose.c ../.tools/microdevtools/microdevtools.c main.m
+SRC:=../../.tools/mongoose/mongoose.c ../../.tools/microdevtools/microdevtools.c main.m
 
 all: debug
 
@@ -451,7 +452,7 @@ release:
 	\$(CC) \$(CFLAGS) -o ${name} \$(SRC) \$(INCLUDES) \$(LIBS) \$(LDFLAGS)
 
 run:
-	LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:../.tools/apr-2/lib:../.tools/json-c/lib \\
+	LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:../../.tools/apr-2/lib:../../.tools/json-c/lib \\
 	\$(VALGRIND) ./${name} -h \$(HOST) -p \$(PORT) -P \$(SSL_PORT) \\
 	-l \$(LOG) -d \$(DBD_DRIVER) -D \$(DBD_CONN_S)
 
@@ -460,8 +461,8 @@ EOF
       fi
     fi
     if [ "$lang" = "c" ]; then
-      if ! test -e "${name}/${name}.c"; then
-        cat <<EOF > ${CURRDIR}/${name}/main.c
+      if ! test -e "${CURRDIR}/api/${name}/main.c"; then
+        cat <<EOF > ${CURRDIR}/api/${name}/main.c
 #include "microdevtools.h"
 int HelloWorldController(ns_service_t *s) {
   ns_http_response_hd_set(s->response, "Content-Type", "application/json");
@@ -469,16 +470,19 @@ int HelloWorldController(ns_service_t *s) {
   ns_printf(s, "{\"err\":%s,\"log\":%s,\"out\":%s}", "false", "null", msg);
   return 200;
 }
+
 void ns_handler(ns_service_t *s) {
   ns_route(s, "GET", "/api/hello", HelloWorldController);
 }
-ns_dbd_pool_t *dbd_pool;
+
 volatile sig_atomic_t server_run = 1;
 void ns_signal_exit(int signum) {
   if (signum == SIGTERM || signum == SIGINT) {
     server_run = 0;
   }
 }
+
+ns_dbd_pool_t *dbd_pool;
 int main(int argc, char **argv) {
   struct sigaction sig_action;
   ns_signal_handler(&sig_action, ns_signal_exit);
@@ -525,7 +529,7 @@ int main(int argc, char **argv) {
   return 0;
 }
 EOF
-        cat <<EOF > ${CURRDIR}/${name}/Makefile
+        cat <<EOF > ${CURRDIR}/api/${name}/Makefile
 HOST:=0.0.0.0
 PORT:=2310
 SSL_PORT:=2443
@@ -536,10 +540,10 @@ DBD_CONN_S:="host=localhost,port=3306,user=test,pass=test,dbname=test"
 CC:=clang
 #-DMG_TLS=MG_TLS_OPENSSL -D_TLS -D_TLS_TWOWAY
 CFLAGS:=-std=gnu99 -D_MONGOOSE
-INCLUDES:=-I. -I.. -I../.tools/apr-2/include -I../.tools/json-c/include -I../.tools/mongoose -I../.tools/microdevtools
-LIBS:=-L../.tools/apr-2/lib -L../.tools/json-c/lib
+INCLUDES:=-I. -I../../.tools/apr-2/include -I../../.tools/json-c/include -I../../.tools/mongoose -I../../.tools/microdevtools
+LIBS:=-L../../.tools/apr-2/lib -L../../.tools/json-c/lib
 LDFLAGS:=-lapr-2 -ljson-c -lssl -lcrypto
-SRC:=../.tools/mongoose/mongoose.c ../.tools/microdevtools/microdevtools.c main.c
+SRC:=../../.tools/mongoose/mongoose.c ../../.tools/microdevtools/microdevtools.c main.c
 
 all: debug
 
@@ -552,7 +556,7 @@ release:
 	\$(CC) \$(CFLAGS) -o ${name} \$(SRC) \$(INCLUDES) \$(LIBS) \$(LDFLAGS)
 
 run:
-	LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:../.tools/apr-2/lib:../.tools/json-c/lib \\
+	LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:../../.tools/apr-2/lib:../../.tools/json-c/lib \\
 	\$(VALGRIND) ./${name} -h \$(HOST) -p \$(PORT) -P \$(SSL_PORT) \\
 	-l \$(LOG) -d \$(DBD_DRIVER) -D \$(DBD_CONN_S)
 
