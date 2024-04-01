@@ -2198,7 +2198,6 @@ void ns_http_request_handler(struct mg_connection *c, int ev, void *ev_data) {
   };
   do {
     if (ev == MG_EV_ACCEPT && c->fn_data != NULL) {
-      printf("req1\n");
       #ifdef _TLS
       struct mg_tls_opts opts = {
         #ifdef _TLS_TWOWAY
@@ -2211,7 +2210,6 @@ void ns_http_request_handler(struct mg_connection *c, int ev, void *ev_data) {
       #endif
     }
     if (ev == MG_EV_HTTP_MSG) {
-      printf("req2\n");
       st.flag.ev_data = ev_data != NULL;
       if ((st.error = !st.flag.ev_data)) break;
       // Event data
