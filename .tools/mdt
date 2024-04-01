@@ -300,7 +300,7 @@ EOF
 # Example: $ sudo mdt -i
 function install {
   CURRDIR=$(pwd)
-  ln -s ${CURRDIR}/.tools/mdt /usr/local/bin/mdt
+  cp ${CURRDIR}/.tools/mdt /usr/local/bin/mdt
   exit 0
 }
 
@@ -314,6 +314,29 @@ function uninstall {
          ${CURRDIR}/.tools/mongoose \
          ${CURRDIR}/.gitignore \
          /usr/local/bin/mdt
+  exit 0
+}
+
+# ------------------------------------------------------------------------------
+
+# Example: $ mkdir myapp && cd myappp && mdt -c
+function create {
+  CURRDIR=$(pwd)
+  if [ -d ".tools" ]; then
+    echo "Application already exists."
+  fi
+  mkdir ${CURRDIR}/.tools
+  cat <<EOF > ${CURRDIR}/.tools/.env
+APR=../apr
+JSONC=../json-c
+MONGOOSE=../mongoose
+MICRODEVTOOLS=../microdevtools
+EOF
+  echo 
+  echo "The application has been created."
+  echo "Modify .tools/.env with the paths of APR, Json-c, and Mongoose"
+  echo "then execute the command mdt -b."
+  echo ""
   exit 0
 }
 
@@ -772,6 +795,9 @@ function main {
   local cmd
   while [[ $# -gt 0 ]]; do
     case "$1" in
+      -c|--create)
+        cmd="create"
+        ;;
       -b|--build)
         cmd="build"
         ;;
