@@ -135,7 +135,7 @@ SRC:=./mongoose/mongoose.c ./microdevtools/microdevtools.c main.c
 
 all:
 	$(eval CFLAGS:=-D_DAEMON $(CFLAGS))
-	$(CC) \$(CFLAGS) -o hello $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o hello $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
 
 debug:
 	$(eval CFLAGS:=-g -D_DEBUG $(CFLAGS))
@@ -150,7 +150,7 @@ int HelloWorldController(ns_service_t *s) {
   @autoreleasepool {
     NSString *hello;
     ns_http_response_hd_set(s->response, "Content-Type", "application/json");
-    const char *msg = ns_json_encode(s->pool, "Hello from ${name}!", NS_JSON_T_STRING);
+    const char *msg = ns_json_encode(s->pool, "Hello, World!", NS_JSON_T_STRING);
     ns_printf(s, "{\"err\":%s,\"log\":%s,\"out\":%s}", "false", "null", msg);
     return 200;
   }
@@ -238,7 +238,8 @@ debug:
 ### Compile and run the HelloWorld microservice (debug version)
 ```bash
 make debug
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./apr-2/lib:./json-c/lib ./hello -h 0.0.0.0 -p 2310 -P 2443 -l hello.log
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./apr-2/lib:./json-c/lib \
+./hello -h 0.0.0.0 -p 2310 -P 2443 -l hello.log
 ```
 ### Test from a second terminal
 #### HTTP
