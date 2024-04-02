@@ -3,59 +3,79 @@ Microservices DevTools
 
 ## Install system dependencies
 ```bash
-apt install clang make curl git python autoconf libtool-bin libexpat1-dev \
-            cmake libssl-dev libmariadb-dev libpq-dev libsqlite3-dev \
-            unixodbc-dev
-```
-#### Install GNUstep OBJ-C support (optional)
-```bash
-apt install gnustep-devel gobjc
-ln -s /usr/lib/gcc/x86_64-linux-gnu/10/include/objc /usr/local/include/objc
+sudo apt install clang make curl git python autoconf libtool-bin libexpat1-dev \
+                 cmake libssl-dev libmariadb-dev libpq-dev libsqlite3-dev \
+                 unixodbc-dev
 ```
 
-## Create a new microservice project
-### Make the project structure
+#### Install GNUstep OBJ-C support (optional)
 ```bash
-/path/to/my/project/
-  Makefile
-  main.c
+sudo apt install gnustep-devel gobjc \
+  && ln -s /usr/lib/gcc/x86_64-linux-gnu/10/include/objc /usr/local/include/objc
 ```
-### Get the latest Apache Portable Runtime version
+
+## Create a new microservices-based project
+### Project structure
+```
+myapp/
+  ...
+  api/
+    helloworld/
+      Makefile
+      main.c
+```
+
+```bash
+mkdir -p myapp/api/helloworld
+```
+
+### Get the latest verison of Apache Portable Runtime
 ```bash
 git clone https://github.com/apache/apr.git apr
-cd apr && ./buildconf \
-       && ./configure --prefix=/tmp/apr --with-mysql --with-pgsql --with-sqlite3 --with-odbc \
-       && make \
-       && make install \
-       && mv /tmp/apr/include/apr-2 /path/to/my/project/apr-2/include \
-       && mv /tmp/apr-install/lib /path/to/my/project/apr-2/apr-2 \
-       && rm -rf /tmp/apr
+mkdir -p myapp/apr-2 \
+  && cd apr \
+  && ./buildconf \
+  && ./configure --prefix=/tmp/apr --with-mysql --with-pgsql --with-sqlite3 --with-odbc \
+  && make \
+  && make install \
+  && mv /tmp/apr/include/apr-2 ../myapp/apr-2/include \
+  && mv /tmp/apr/lib ../myapp/apr-2 \
+  && rm -rf /tmp/apr \
+  && cd ..
 ```
-### Get the latest JSON-c version
+
+### Get the latest version of JSON-c
 ```bash
 git clone https://github.com/json-c/json-c.git json-c
-mkdir jsonc && cd jsonc
-            && cmake ../json-c -DCMAKE_INSTALL_PREFIX=/tmp/jsonc \
-            && make \
-            && make install \
-            && mv /tmp/jsonc/include/json-c /path/to/my/project/json-c/include \
-            && mv /tmp/jsonc/lib /path/to/my/project/json-c/lib \
-            && rm -rf /tmp/jsonc \
-            && cd ..
-            && rm -rf jsonc
+mkdir -p myapp/json-c \
+  && mkdir jsonc \
+  && cd jsonc \
+  && cmake ../json-c -DCMAKE_INSTALL_PREFIX=/tmp/jsonc \
+  && make \
+  && make install \
+  && mv /tmp/jsonc/include/json-c ../myapp/json-c/include \
+  && mv /tmp/jsonc/lib ../myapp/json-c/lib \
+  && rm -rf /tmp/jsonc \
+  && cd .. \
+  && rm -rf jsonc /tmp/jsonc
 ```
-### Get the latest Mongoose version
+
+### Get the latest version of Mongoose
 ```bash
 git clone https://github.com/cesanta/mongoose.git mongoose
-cp mongoose/mongoose.* /path/to/my/project/mongoose
+mkdir -p myapp/mongoose \
+  && cp mongoose/mongoose.* myapp/mongoose
 ```
-### Get latest MicroDevTools version
+
+### Get latest version of MicroDevTools
 ```bash
 git clone https://github.com/riccardovacirca/microdevtools.git microdevtools
-cp microdevtools/microdevtools.* /path/to/my/project/microdevtools
+mkdir -p myapp/microdevtools \
+  && cp microdevtools/microdevtools.* myapp/microdevtools
 ```
-### Create an HelloWorld C microservice
-<code>main.c</code>
+
+### Create a HelloWorld microservice in c
+<code>myapp/api/helloworld/main.c</code>
 ```c
 #include "microdevtools.h"
 
@@ -141,7 +161,7 @@ debug:
 	$(CC) $(CFLAGS) -o hello $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
 ```
 
-### Create an HelloWorld Objective-c microservice
+### Create a HelloWorld microservice in Objective-c
 <code>main.m</code>
 ```c
 #import "microdevtools.h"
@@ -233,18 +253,18 @@ debug:
 	$(eval CFLAGS:=-g -D_DEBUG \$(CFLAGS))
 	$(CC) $(CFLAGS) -o hello $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
 ```
+
 ### Compile and run the HelloWorld microservice (debug version)
 ```bash
 make debug
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./apr-2/lib:./json-c/lib \
-./hello -h 0.0.0.0 -p 2310 -P 2443 -l hello.log
+  ./hello -h 0.0.0.0 -p 2310 -P 2443 -l hello.log
 ```
-### Test from a second terminal
-<code>HTTP</code>
+<code>TEST HTTP</code>
 ```bash
 curl -i "http://localhost:2310/api/hello"
 ```
-<code>HTTPS</code>
+<code>TEST HTTPS</code>
 ```bash
 curl -i "https://localhost:2443/api/hello"
 ```
@@ -262,6 +282,7 @@ server {
   }
 }
 ```
+
 <code>/etc/nginx/sites-available/myapp_hello_location.conf</code>
 ```nginx
 location /api/hello/ {
@@ -269,6 +290,7 @@ location /api/hello/ {
   proxy_pass https://myapp-hello;
 }
 ```
+
 <code>/etc/nginx/sites-available/myapp_*_upstream.conf</code>
 ```nginx
 upstream myapp-hello {
@@ -277,4 +299,3 @@ upstream myapp-hello {
   server localhost:2445 fail_timeout=10s max_fails=3;
 }
 ```
-
