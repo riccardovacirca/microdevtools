@@ -285,7 +285,7 @@ run:
 
 ### Compile and run the HelloWorld microservice (debug version)
 ```bash
-cd api/helloworld && make debug && make run
+make debug && make run
 ```
 <code>TEST HTTP</code>
 ```bash
