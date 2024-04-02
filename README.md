@@ -128,20 +128,18 @@ int main(int argc, char **argv) {
 ```makefile
 CC:=clang
 CFLAGS:=-std=gnu99 -D_MONGOOSE \$(TLS_2WAY)
-INCLUDES:=-I. -I${APP_ROOT}/.tools/apr-2/include -I${APP_ROOT}/.tools/json-c/include -I${APP_ROOT}/.tools/mongoose -I${APP_ROOT}/.tools/microdevtools
-LIBS:=-L${APP_ROOT}/.tools/apr-2/lib -L${APP_ROOT}/.tools/json-c/lib
+INCLUDES:=-I. -I./apr-2/include -I./json-c/include -I./mongoose -I./microdevtools
+LIBS:=-L./apr-2/lib -L./json-c/lib
 LDFLAGS:=-lapr-2 -ljson-c -lssl -lcrypto
-SRC:=${APP_ROOT}/.tools/mongoose/mongoose.c ${APP_ROOT}/.tools/microdevtools/microdevtools.c main.c
+SRC:=./mongoose/mongoose.c ./microdevtools/microdevtools.c main.c
 
-all: debug
+all:
+	$(eval CFLAGS:=-D_DAEMON $(CFLAGS))
+	$(CC) \$(CFLAGS) -o hello $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
 
 debug:
-	\$(eval CFLAGS:=-g -D_DEBUG \$(CFLAGS))
-	\$(CC) \$(CFLAGS) -o ${name} \$(SRC) \$(INCLUDES) \$(LIBS) \$(LDFLAGS)
-
-release:
-	\$(eval CFLAGS:=-D_DAEMON \$(CFLAGS))
-	\$(CC) \$(CFLAGS) -o ${name} \$(SRC) \$(INCLUDES) \$(LIBS) \$(LDFLAGS)
+	$(eval CFLAGS:=-g -D_DEBUG $(CFLAGS))
+	$(CC) $(CFLAGS) -o hello $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
 ```
 
 ### Create an HelloWorld ObjC microservice
@@ -220,9 +218,12 @@ int main(int argc, char **argv) {
 #### Makefile
 ```makefile
 CC:=clang
-CFLAGS:=-std=gnu99 -D_MONGOOSE -D_NATIVE_OBJC_EXCEPTIONS -fconstant-string-class=NSConstantString
-INCLUDES:=-I. -I./apr-2/include -I./json-c/include -I./mongoose -I./microdevtools -I `gnustep-config --variable=GNUSTEP_SYSTEM_HEADERS\`
-LIBS:=-L./apr-2/lib -L./json-c/lib -L \`gnustep-config --variable=GNUSTEP_SYSTEM_LIBRARIES\`
+CFLAGS:=-std=gnu99 -D_MONGOOSE -D_NATIVE_OBJC_EXCEPTIONS \
+        -fconstant-string-class=NSConstantString
+INCLUDES:=-I. -I./apr-2/include -I./json-c/include -I./mongoose \
+          -I./microdevtools -I `gnustep-config --variable=GNUSTEP_SYSTEM_HEADERS`
+LIBS:=-L./apr-2/lib -L./json-c/lib \
+      -L `gnustep-config --variable=GNUSTEP_SYSTEM_LIBRARIES`
 LDFLAGS:=-lapr-2 -ljson-c -lssl -lcrypto -lgnustep-base -lobjc
 SRC:=./mongoose/mongoose.c ./microdevtools/microdevtools.c main.m
 
