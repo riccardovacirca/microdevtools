@@ -127,7 +127,7 @@ int main(int argc, char **argv) {
 #### Makefile
 ```makefile
 CC:=clang
-CFLAGS:=-std=gnu99 -D_MONGOOSE \$(TLS_2WAY)
+CFLAGS:=-std=gnu99 -D_MONGOOSE
 INCLUDES:=-I. -I./apr-2/include -I./json-c/include -I./mongoose -I./microdevtools
 LIBS:=-L./apr-2/lib -L./json-c/lib
 LDFLAGS:=-lapr-2 -ljson-c -lssl -lcrypto
