@@ -55,6 +55,7 @@ git clone https://github.com/riccardovacirca/microdevtools.git microdevtools
 cp microdevtools/microdevtools.* /path/to/my/project/microdevtools
 ```
 ### Create an HelloWorld C microservice
+<code>main.c</code>
 ```c
 #include "microdevtools.h"
 
@@ -106,11 +107,9 @@ int main(int argc, char **argv) {
   if (MONGOOSE) {
     struct mg_mgr mgr;
     mg_mgr_init(&mgr);
-    if (TLS) {
-      if (s->addr_s) {
-        mg_http_listen(&mgr, s->addr, ns_http_request_handler, NULL);
-        mg_http_listen(&mgr, s->addr_s, ns_http_request_handler, (void*)s);
-      }
+    if (TLS && s->addr_s) {
+      mg_http_listen(&mgr, s->addr, ns_http_request_handler, NULL);
+      mg_http_listen(&mgr, s->addr_s, ns_http_request_handler, (void*)s);
     } else {
       mg_http_listen(&mgr, s->addr, ns_http_request_handler, (void*)s);
     }
@@ -124,7 +123,7 @@ int main(int argc, char **argv) {
   return 0;
 }
 ```
-#### Makefile
+<code>Makefile</code>
 ```makefile
 CC:=clang
 CFLAGS:=-std=gnu99 -D_MONGOOSE
@@ -143,6 +142,7 @@ debug:
 ```
 
 ### Create an HelloWorld Objective-c microservice
+<code>main.m</code>
 ```c
 #import "microdevtools.h"
 
@@ -197,11 +197,9 @@ int main(int argc, char **argv) {
   if (MONGOOSE) {
     struct mg_mgr mgr;
     mg_mgr_init(&mgr);
-    if (TLS) {
-      if (s->addr_s) {
-        mg_http_listen(&mgr, s->addr, ns_http_request_handler, NULL);
-        mg_http_listen(&mgr, s->addr_s, ns_http_request_handler, (void*)s);
-      }
+    if (TLS && s->addr_s) {
+      mg_http_listen(&mgr, s->addr, ns_http_request_handler, NULL);
+      mg_http_listen(&mgr, s->addr_s, ns_http_request_handler, (void*)s);
     } else {
       mg_http_listen(&mgr, s->addr, ns_http_request_handler, (void*)s);
     }
@@ -215,7 +213,7 @@ int main(int argc, char **argv) {
   return 0;
 }
 ```
-#### Makefile
+<code>Makefile</code>
 ```makefile
 CC:=clang
 CFLAGS:=-std=gnu99 -D_MONGOOSE -D_NATIVE_OBJC_EXCEPTIONS \
@@ -242,11 +240,41 @@ LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./apr-2/lib:./json-c/lib \
 ./hello -h 0.0.0.0 -p 2310 -P 2443 -l hello.log
 ```
 ### Test from a second terminal
-#### HTTP
+<code>HTTP</code>
 ```bash
 curl -i "http://localhost:2310/api/hello"
 ```
-#### HTTPS
+<code>HTTPS</code>
 ```bash
 curl -i "https://localhost:2443/api/hello"
 ```
+
+### Create a simple Nginx API gateway
+<code>/etc/nginx/sites-available/myapp.conf</code>
+```nginx
+include /etc/nginx/sites-available/myapp_*_upstream.conf;
+server {
+  listen 80;
+  server_name localhost;
+  include /etc/nginx/sites-available/myapp_*_location.conf;
+  location / {
+    root /var/www/html/myapp;
+  }
+}
+```
+<code>/etc/nginx/sites-available/myapp_hello_location.conf</code>
+```nginx
+location /api/hello/ {
+  rewrite ^/api/hello(.*) /api$1 break;
+  proxy_pass https://myapp-hello;
+}
+```
+<code>/etc/nginx/sites-available/myapp_*_upstream.conf</code>
+```nginx
+upstream myapp-hello {
+  server localhost:2443 fail_timeout=10s max_fails=3;
+  server localhost:2444 fail_timeout=10s max_fails=3;
+  server localhost:2445 fail_timeout=10s max_fails=3;
+}
+```
+
