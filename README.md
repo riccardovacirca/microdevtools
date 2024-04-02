@@ -32,6 +32,8 @@ mkdir -p myapp/api/helloworld
 ### Get the latest verison of Apache Portable Runtime
 ```bash
 git clone https://github.com/apache/apr.git apr
+```
+```bash
 mkdir -p myapp/apr-2 \
   && cd apr \
   && ./buildconf \
@@ -47,6 +49,8 @@ mkdir -p myapp/apr-2 \
 ### Get the latest version of JSON-c
 ```bash
 git clone https://github.com/json-c/json-c.git json-c
+```
+```bash
 mkdir -p myapp/json-c \
   && mkdir jsonc \
   && cd jsonc \
@@ -63,6 +67,8 @@ mkdir -p myapp/json-c \
 ### Get the latest version of Mongoose
 ```bash
 git clone https://github.com/cesanta/mongoose.git mongoose
+```
+```bash
 mkdir -p myapp/mongoose \
   && cp mongoose/mongoose.* myapp/mongoose
 ```
@@ -70,6 +76,8 @@ mkdir -p myapp/mongoose \
 ### Get latest version of MicroDevTools
 ```bash
 git clone https://github.com/riccardovacirca/microdevtools.git microdevtools
+```
+```bash
 mkdir -p myapp/microdevtools \
   && cp microdevtools/microdevtools.* myapp/microdevtools
 ```
@@ -257,6 +265,8 @@ debug:
 ### Compile and run the HelloWorld microservice (debug version)
 ```bash
 make debug
+```
+```bash
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./apr-2/lib:./json-c/lib \
   ./hello -h 0.0.0.0 -p 2310 -P 2443 -l hello.log
 ```
