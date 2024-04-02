@@ -394,15 +394,6 @@ int ns_jwt_token_validate(apr_pool_t *mp, const char *tok, const char *key);
 #define TLS 0
 #endif
 
-#ifdef _TLS
-#include "certs.h"
-#ifdef _TLS_TWOWAY
-extern const char *s_tls_ca;
-#endif
-extern const char *s_tls_cert;
-extern const char *s_tls_key;
-#endif
-
 #define HTTP_OK_FMT "HTTP/1.1 200 OK\r\n%sContent-Length: %d\r\n\r\n"
 #define NS_DBD_POOL_INIT_SIZE 20
 

@@ -1,6 +1,10 @@
 
 #include "microdevtools.h"
 
+#ifdef _TLS
+#include "certs.h"
+#endif
+
 /*
  * COMMON
  */

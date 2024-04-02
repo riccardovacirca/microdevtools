@@ -175,7 +175,7 @@ debug:
 
 run:
 	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib \
-	./helloworld -h 0.0.0.0 -p 2310 -l helloworld.log
+	./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
 
 .PHONY: all debug run
 ```
@@ -269,16 +269,16 @@ LDFLAGS:=-lapr-2 -ljson-c -lssl -lcrypto -lgnustep-base -lobjc
 SRC:=../../mongoose/mongoose.c ../../microdevtools/microdevtools.c helloworld.m main.m
 
 all:
-	$(eval CFLAGS:=-D_DAEMON \$(CFLAGS))
+	$(eval CFLAGS:=-D_DAEMON $(CFLAGS))
 	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
 
 debug:
-	$(eval CFLAGS:=-g -D_DEBUG \$(CFLAGS))
+	$(eval CFLAGS:=-g -D_DEBUG $(CFLAGS))
 	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
 
 run:
 	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib \
-	./helloworld -h 0.0.0.0 -p 2310 -l helloworld.log
+	./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
 
 .PHONY: all debug run
 ```
@@ -290,6 +290,77 @@ make debug && make run
 <code>TEST HTTP</code>
 ```bash
 curl -i "http://localhost:2310/api/helloworld"
+```
+
+### Enable TLS
+Create and run a <code>myapp/api/helloworld/cert.sh</code> bash script:
+```bash
+#!/bin/bash
+mkdir -p /tmp/microdevtools
+
+if ! test -e "/tmp/microdevtools/ca_root.key"; then
+  openssl genrsa -out /tmp/microdevtools/ca_root.key 4096 \
+    && openssl req -new -x509 -days 365 -key /tmp/microdevtools/ca_root.key \
+    -out /tmp/microdevtools/ca_root.crt -subj "/CN=MDT_ROOT_CA"
+  rm -rf $1.key $1.crs $1.crt certs.h
+fi
+
+if ! test -e "$1.key"; then
+  openssl genrsa -out $1.key 2048 \
+    && openssl req -new -key $1.key -out $1.csr -subj "/CN=$1" \
+    && openssl x509 -req -days 365 -in $1.csr -CA /tmp/microdevtools/ca_root.crt -CAkey /tmp/microdevtools/ca_root.key -set_serial 01 -out $1.crt
+fi
+
+ca_crt_file=/tmp/microdevtools/ca_root.crt
+ca_c_variable_name=s_tls_ca
+server_crt_file=$1.crt
+server_crt_c_variable_name=s_tls_cert
+server_key_file=$1.key
+server_key_c_variable_name=s_tls_key
+
+ca_crt_variable="const char *${ca_c_variable_name} ="
+while IFS= read -r line; do
+  ca_crt_variable="${ca_crt_variable}\n\"${line}\\\\n\""
+done < "$ca_crt_file"
+ca_crt_variable="${ca_crt_variable};"
+
+server_crt_variable="const char *${server_crt_c_variable_name} ="
+while IFS= read -r line; do
+  server_crt_variable="${server_crt_variable}\n\"${line}\\\\n\""
+done < "$server_crt_file"
+server_crt_variable="${server_crt_variable};"
+
+server_key_variable="const char *${server_key_c_variable_name} ="
+while IFS= read -r line; do
+  server_key_variable="${server_key_variable}\n\"${line}\\\\n\""
+done < "$server_key_file"
+server_key_variable="${server_key_variable};"
+
+echo -e "#ifndef CERT_H" > certs.h
+echo -e "#define CERT_H\n" >> certs.h
+echo -e "#ifdef _TLS" >> certs.h
+echo -e "#ifdef _TLS_TWOWAY" >> certs.h
+echo -e "$ca_crt_variable" >> certs.h
+echo -e "#endif\n" >> certs.h
+echo -e "$server_crt_variable" >> certs.h
+echo -e "$server_key_variable" >> certs.h
+echo -e "#endif" >> certs.h
+echo -e "#endif /* CERT_H */" >> certs.h
+```
+```bash
+chmod +x cert.sh && ./cert.sh helloworld
+```
+Add the TLS flags to the CFLAGS:
+```makefile
+CFLAGS:=-std=gnu99 -D_MONGOOSE -DMG_TLS=MG_TLS_OPENSSL -D_TLS ...
+```
+Compile and run the HelloWorld microservice (debug version)
+```bash
+make debug && make run
+```
+<code>TEST HTTPS</code>
+```bash
+curl -k -i "https://localhost:2443/api/helloworld"
 ```
 
 ### Create a simple Nginx API gateway
