@@ -292,6 +292,21 @@ make debug && make run
 curl -i "http://localhost:2310/api/helloworld"
 ```
 
+### Connect to a PostgreSQL database
+To connect to a PostgreSQL database, start the service by adding the following
+arguments from the command line:
+```bash
+-d pgsql
+-D "hostaddr=127.0.0.1 host=localhost port=5432 user=bob password=secret dbname=test"
+```
+### Connect to a MariaDB database
+To connect to a MariaDB database, start the service by adding the following
+arguments from the command line:
+```bash
+-d pgsql
+-D "host=127.0.0.1,port=3306,user=bob,pass=secret,dbname=test"
+```
+
 ### Enable TLS
 Create and run a <code>myapp/api/helloworld/cert.sh</code> bash script:
 ```bash
