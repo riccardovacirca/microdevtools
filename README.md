@@ -181,7 +181,7 @@ run:
 ```
 
 ### Create a HelloWorld microservice in Objective-c
-<code>myapp/api/helloworld/helloworld.c</code>
+<code>myapp/api/helloworld/helloworld.m</code>
 ```c
 #import "microdevtools.h"
 
