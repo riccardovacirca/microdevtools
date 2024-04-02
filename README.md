@@ -96,7 +96,7 @@ int HelloWorldController(ns_service_t *s) {
 }
 
 void ns_handler(ns_service_t *s) {
-  ns_route(s, "GET", "/api/hello", HelloWorldController);
+  ns_route(s, "GET", "/api/helloworld", HelloWorldController);
 }
 ```
 <code>myapp/api/helloworld/main.c</code>
@@ -190,7 +190,7 @@ int HelloWorldController(ns_service_t *s) {
 }
 
 void ns_handler(ns_service_t *s) {
-  ns_route(s, "GET", "/api/hello", HelloWorldController);
+  ns_route(s, "GET", "/api/helloworld", HelloWorldController);
 }
 ```
 <code>myapp/api/helloworld/main.m</code>
@@ -277,15 +277,15 @@ make debug
 ```
 ```bash
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib \
-  ./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l hello.log
+  ./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
 ```
 <code>TEST HTTP</code>
 ```bash
-curl -i "http://localhost:2310/api/hello"
+curl -i "http://localhost:2310/api/helloworld"
 ```
 <code>TEST HTTPS</code>
 ```bash
-curl -i "https://localhost:2443/api/hello"
+curl -i "https://localhost:2443/api/helloworld"
 ```
 
 ### Create a simple Nginx API gateway
@@ -304,15 +304,15 @@ server {
 
 <code>/etc/nginx/sites-available/myapp_hello_location.conf</code>
 ```nginx
-location /api/hello/ {
-  rewrite ^/api/hello(.*) /api$1 break;
-  proxy_pass https://myapp-hello;
+location /api/helloworld/ {
+  rewrite ^/api/helloworld(.*) /api$1 break;
+  proxy_pass https://myapp-helloworld;
 }
 ```
 
 <code>/etc/nginx/sites-available/myapp_*_upstream.conf</code>
 ```nginx
-upstream myapp-hello {
+upstream myapp-helloworld {
   server localhost:2443 fail_timeout=10s max_fails=3;
   server localhost:2444 fail_timeout=10s max_fails=3;
   server localhost:2445 fail_timeout=10s max_fails=3;
