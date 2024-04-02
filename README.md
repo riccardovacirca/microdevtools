@@ -82,8 +82,9 @@ mkdir -p myapp/microdevtools \
   && cp microdevtools/microdevtools.* myapp/microdevtools
 ```
 
-### Create a HelloWorld microservice in c
-<code>myapp/api/helloworld/main.c</code>
+### Create a HelloWorld microservice in C
+
+<code>myapp/api/helloworld/helloworld.c</code>
 ```c
 #include "microdevtools.h"
 
@@ -94,12 +95,16 @@ int HelloWorldController(ns_service_t *s) {
   return 200;
 }
 
-ns_dbd_pool_t *dbd_pool;
-volatile sig_atomic_t server_run = 1;
-
 void ns_handler(ns_service_t *s) {
   ns_route(s, "GET", "/api/hello", HelloWorldController);
 }
+```
+<code>myapp/api/helloworld/main.c</code>
+```c
+#include "microdevtools.h"
+
+ns_dbd_pool_t *dbd_pool;
+volatile sig_atomic_t server_run = 1;
 
 void ns_signal_exit(int signum) {
   if (signum == SIGTERM || signum == SIGINT) {
@@ -155,22 +160,22 @@ int main(int argc, char **argv) {
 ```makefile
 CC:=clang
 CFLAGS:=-std=gnu99 -D_MONGOOSE
-INCLUDES:=-I. -I./apr-2/include -I./json-c/include -I./mongoose -I./microdevtools
-LIBS:=-L./apr-2/lib -L./json-c/lib
+INCLUDES:=-I. -I../../apr-2/include -I../../json-c/include -I../../mongoose -I../../microdevtools
+LIBS:=-L../../apr-2/lib -L../../json-c/lib
 LDFLAGS:=-lapr-2 -ljson-c -lssl -lcrypto
-SRC:=./mongoose/mongoose.c ./microdevtools/microdevtools.c main.c
+SRC:=../../mongoose/mongoose.c ../../microdevtools/microdevtools.c helloworld.c main.c
 
 all:
 	$(eval CFLAGS:=-D_DAEMON $(CFLAGS))
-	$(CC) $(CFLAGS) -o hello $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
 
 debug:
 	$(eval CFLAGS:=-g -D_DEBUG $(CFLAGS))
-	$(CC) $(CFLAGS) -o hello $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
 ```
 
 ### Create a HelloWorld microservice in Objective-c
-<code>main.m</code>
+<code>myapp/api/helloworld/helloworld.c</code>
 ```c
 #import "microdevtools.h"
 
@@ -184,12 +189,16 @@ int HelloWorldController(ns_service_t *s) {
   }
 }
 
-ns_dbd_pool_t *dbd_pool;
-volatile sig_atomic_t server_run = 1;
-
 void ns_handler(ns_service_t *s) {
   ns_route(s, "GET", "/api/hello", HelloWorldController);
 }
+```
+<code>myapp/api/helloworld/main.m</code>
+```c
+#import "microdevtools.h"
+
+ns_dbd_pool_t *dbd_pool;
+volatile sig_atomic_t server_run = 1;
 
 void ns_signal_exit(int signum) {
   if (signum == SIGTERM || signum == SIGINT) {
@@ -246,20 +255,20 @@ int main(int argc, char **argv) {
 CC:=clang
 CFLAGS:=-std=gnu99 -D_MONGOOSE -D_NATIVE_OBJC_EXCEPTIONS \
         -fconstant-string-class=NSConstantString
-INCLUDES:=-I. -I./apr-2/include -I./json-c/include -I./mongoose \
-          -I./microdevtools -I `gnustep-config --variable=GNUSTEP_SYSTEM_HEADERS`
-LIBS:=-L./apr-2/lib -L./json-c/lib \
+INCLUDES:=-I. -I../../apr-2/include -I../../json-c/include -I../../mongoose \
+          -I../../microdevtools -I `gnustep-config --variable=GNUSTEP_SYSTEM_HEADERS`
+LIBS:=-L../../apr-2/lib -L../../json-c/lib \
       -L `gnustep-config --variable=GNUSTEP_SYSTEM_LIBRARIES`
 LDFLAGS:=-lapr-2 -ljson-c -lssl -lcrypto -lgnustep-base -lobjc
-SRC:=./mongoose/mongoose.c ./microdevtools/microdevtools.c main.m
+SRC:=../../mongoose/mongoose.c ../../microdevtools/microdevtools.c helloworld.m main.m
 
 all:
 	$(eval CFLAGS:=-D_DAEMON \$(CFLAGS))
-	$(CC) $(CFLAGS) -o hello $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
 
 debug:
 	$(eval CFLAGS:=-g -D_DEBUG \$(CFLAGS))
-	$(CC) $(CFLAGS) -o hello $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
 ```
 
 ### Compile and run the HelloWorld microservice (debug version)
@@ -267,8 +276,8 @@ debug:
 make debug
 ```
 ```bash
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./apr-2/lib:./json-c/lib \
-  ./hello -h 0.0.0.0 -p 2310 -P 2443 -l hello.log
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib \
+  ./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l hello.log
 ```
 <code>TEST HTTP</code>
 ```bash
