@@ -142,7 +142,7 @@ debug:
 	$(CC) $(CFLAGS) -o hello $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
 ```
 
-### Create an HelloWorld ObjC microservice
+### Create an HelloWorld Objective-c microservice
 ```c
 #import "microdevtools.h"
 
