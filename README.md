@@ -294,6 +294,9 @@ curl -i "http://localhost:2310/api/helloworld"
 
 ### Create a simple Nginx API gateway
 <code>/etc/nginx/sites-available/myapp.conf</code>
+```bash
+sudo nano /etc/nginx/sites-available/myapp.conf
+```
 ```nginx
 include /etc/nginx/sites-available/myapp_*_upstream.conf;
 server {
@@ -306,6 +309,9 @@ server {
 }
 ```
 <code>/etc/nginx/sites-available/myapp_hello_location.conf</code>
+```bash
+sudo nano /etc/nginx/sites-available/myapp_hello_location.conf
+```
 ```nginx
 location /api/helloworld/ {
   rewrite ^/api/helloworld(.*) /api$1 break;
@@ -313,8 +319,17 @@ location /api/helloworld/ {
 }
 ```
 <code>/etc/nginx/sites-available/myapp_*_upstream.conf</code>
+```bash
+sudo nano /etc/nginx/sites-available/myapp_*_upstream.conf
+```
 ```nginx
 upstream myapp-helloworld {
   server localhost:2310 fail_timeout=10s max_fails=3;
 }
+```
+```bash
+sudo nginx -t
+```
+```bash
+sudo service nginx restart
 ```
