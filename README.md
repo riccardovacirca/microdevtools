@@ -172,6 +172,12 @@ all:
 debug:
 	$(eval CFLAGS:=-g -D_DEBUG $(CFLAGS))
 	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
+
+run:
+	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib \
+	./helloworld -h 0.0.0.0 -p 2310 -l helloworld.log
+
+.PHONY: all debug run
 ```
 
 ### Create a HelloWorld microservice in Objective-c
@@ -269,23 +275,21 @@ all:
 debug:
 	$(eval CFLAGS:=-g -D_DEBUG \$(CFLAGS))
 	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
+
+run:
+	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib \
+	./helloworld -h 0.0.0.0 -p 2310 -l helloworld.log
+
+.PHONY: all debug run
 ```
 
 ### Compile and run the HelloWorld microservice (debug version)
 ```bash
-make debug
-```
-```bash
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib \
-  ./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
+cd api/helloworld && make debug && make run
 ```
 <code>TEST HTTP</code>
 ```bash
 curl -i "http://localhost:2310/api/helloworld"
-```
-<code>TEST HTTPS</code>
-```bash
-curl -i "https://localhost:2443/api/helloworld"
 ```
 
 ### Create a simple Nginx API gateway
@@ -301,20 +305,16 @@ server {
   }
 }
 ```
-
 <code>/etc/nginx/sites-available/myapp_hello_location.conf</code>
 ```nginx
 location /api/helloworld/ {
   rewrite ^/api/helloworld(.*) /api$1 break;
-  proxy_pass https://myapp-helloworld;
+  proxy_pass http://myapp-helloworld;
 }
 ```
-
 <code>/etc/nginx/sites-available/myapp_*_upstream.conf</code>
 ```nginx
 upstream myapp-helloworld {
-  server localhost:2443 fail_timeout=10s max_fails=3;
-  server localhost:2444 fail_timeout=10s max_fails=3;
-  server localhost:2445 fail_timeout=10s max_fails=3;
+  server localhost:2310 fail_timeout=10s max_fails=3;
 }
 ```
