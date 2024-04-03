@@ -87,6 +87,72 @@
 # test:
 # curl -k -c "/tmp/cookie.txt" -b "/tmp/cookie.txt" --key ".tools/certs/client.key" --cert ".tools/certs/client.crt" -i "https://localhost:2443/api/hello"
 
+
+# #include "microdevtools.h"
+# int HelloWorldController(ns_service_t *s) {
+#   ns_http_response_hd_set(s->response, "Content-Type", "application/json");
+#   const char *msg = ns_json_encode(s->pool, "Hello, World!", NS_JSON_T_STRING);
+#   ns_printf(s, "{\"err\":%s,\"log\":%s,\"out\":%s}", "false", "null", msg);
+#   return 200;
+# }
+# void ns_handler(ns_service_t *s) {
+#   ns_route(s, "GET", "/api/hello", HelloWorldController);
+# }
+# ns_dbd_pool_t *dbd_pool;
+# volatile sig_atomic_t server_run = 1;
+# void ns_signal_exit(int signum) {
+#   if (signum == SIGTERM || signum == SIGINT) {
+#     server_run = 0;
+#   }
+# }
+# int main(int argc, char **argv) {
+#   struct sigaction sig_action;
+#   ns_signal_handler(&sig_action, ns_signal_exit);
+#   apr_status_t rv = apr_initialize();
+#   if (rv == APR_SUCCESS) {
+#     apr_pool_t *pool;
+#     rv = apr_pool_create(&(pool), NULL);
+#     if (rv == APR_SUCCESS) {
+#       ns_server_t *server = ns_server_alloc(pool);
+#       if (server) {
+#         char *er_msg;
+#         server = ns_server_init(pool, &(st.server), argc, argv, &(er_msg));
+#         dbd_pool = NULL;
+#         if ((server)->dbd_driver != NULL) {
+#           if ((server)->dbd_conn_s != NULL) {
+#             rv = apr_dbd_init(pool);
+#             if (rv != APR_SUCCESS) goto free_mem;
+#             dbd_pool = ns_dbd_pool_alloc(st.pool);
+#             if (!dbd_pool) goto free_mem;
+#             dbd_pool = ns_dbd_pool_init(pool, server->dbd_driver, server->dbd_conn_s);
+#             if (!dbd_pool) goto free_mem;
+#           }
+#         }
+#         if (DAEMON) ns_daemonize();
+#         if (!MONGOOSE) goto free_mem;
+#         struct mg_mgr mgr;
+#         mg_mgr_init(&mgr);
+#         if (TLS) {
+#           if ((st.server)->addr_s) {
+#             mg_http_listen(&mgr, server->addr, ns_http_request_handler, NULL);
+#             mg_http_listen(&mgr, server->addr_s, ns_http_request_handler, (void*)(server));
+#           }
+#         } else {
+#           mg_http_listen(&mgr, server->addr, ns_http_request_handler, (void*)(server));
+#         }
+#         while (server_run) mg_mgr_poll(&mgr, 1000);
+#         mg_mgr_free(&mgr);
+#         if(dbd_pool) ns_dbd_pool_destroy();
+#         ns_server_destroy(server);
+#       }
+# free_mem:
+#       apr_pool_destroy(pool);
+#     }
+#     apr_terminate();
+# end:
+#   return 0;
+# }
+
 name=""
 lang="c"
 port=""
@@ -94,15 +160,16 @@ port=""
 # ------------------------------------------------------------------------------
 
 function usage {
-  #echo "$cmd $name $lang"
-  echo "Usage: ns [options]"
-  echo "  -i    Install"
+  echo "Usage: mdt [options]"
+  echo "  -b, --build        Build MicroDevTools locally"
+  echo "  -i, --install      Install MicroDevTools"
+  echo "  -u, --uninstall    Uninstall MicroDevTools"
   exit 0
 }
 
 # ------------------------------------------------------------------------------
 
-function install {
+function build {
   CURRDIR=$(pwd);
   if ! test -e "${CURRDIR}/.tools/.env"; then
     exit 0
@@ -120,13 +187,14 @@ function install {
     echo "${MONGOOSE} does not exist."
     exit 0
   fi
-  mkdir -p ${CURRDIR}/.tools/apr-2
-  mkdir -p ${CURRDIR}/.tools/json-c
-  mkdir -p ${CURRDIR}/.tools/mongoose
+  rm -rf ${CURRDIR}/.tools/apr-2 && mkdir -p ${CURRDIR}/.tools/apr-2
+  rm -rf ${CURRDIR}/.tools/json-c && mkdir -p ${CURRDIR}/.tools/json-c
+  rm -rf ${CURRDIR}/.tools/mongoose && mkdir -p ${CURRDIR}/.tools/mongoose
   cd $APR && ./buildconf && ./configure --prefix=/tmp/apr-install \
-    --with-mysql --with-pgsql --with-sqlite3 --with-odbc && make && make install \
-    && mv /tmp/apr-install/include/apr-2 ${CURRDIR}/.tools/apr-2/include \
-    && mv /tmp/apr-install/lib ${CURRDIR}/.tools/apr-2 && rm -rf /tmp/apr-install;
+    --with-mysql --with-pgsql --with-sqlite3 --with-odbc && make && \
+    make install && mv /tmp/apr-install/include/apr-2 \
+    ${CURRDIR}/.tools/apr-2/include && mv /tmp/apr-install/lib \
+    ${CURRDIR}/.tools/apr-2 && rm -rf /tmp/apr-install
   cd $JSONC && cd .. && rm -rf json-c-build && mkdir json-c-build \
     && cd json-c-build && cmake ../$(basename "$JSONC") \
     -DCMAKE_INSTALL_PREFIX=/tmp/json-c-install && make && make install \
@@ -134,17 +202,45 @@ function install {
     && mv /tmp/json-c-install/lib ${CURRDIR}/.tools/json-c/lib \
     && rm -rf /tmp/json-c-install
   cp $MONGOOSE/mongoose.* ${CURRDIR}/.tools/mongoose
-  
+  cat <<EOF > ${CURRDIR}/.gitignore
+.gitignore
+.tools/apr-2
+.tools/json-c
+.tools/mongoose
+EOF
+  exit 0
+}
+
+# ------------------------------------------------------------------------------
+
+# Example: $ sudo mdt -i
+function install {
+  CURRDIR=$(pwd)
+  ln -s ${CURRDIR}/.tools/mdt /usr/local/bin/mdt
+  exit 0
+}
+
+# ------------------------------------------------------------------------------
+
+# Example: $ sudo mdt -u
+function uninstall {
+  CURRDIR=$(pwd);
+  rm -rf ${CURRDIR}/.tools/apr-2 \
+         ${CURRDIR}/.tools/json-c \
+         ${CURRDIR}/.tools/mongoose \
+         ${CURRDIR}/.gitignore \
+         /usr/local/bin/mdt
+  exit 0
 }
 
 # ------------------------------------------------------------------------------
 
 function service {
+  CURRDIR=$(pwd)
   if [ -d "${name}" ]; then
     echo "Service '${name}' already exists."
   fi
   if [[ -n $name ]]; then
-    CURRDIR=$(pwd);
     mkdir -p ${name}
     if test -e "${CURRDIR}/${name}/Makefile"; then
       exit 0;
@@ -462,6 +558,7 @@ function cert {
   echo -e "#endif" >> ${CURRDIR}/api/${NAME}/certs.h
   echo -e "#endif /* CERT_H */" >> ${CURRDIR}/api/${NAME}/certs.h
 
+  exit 0
 }
 
 # ------------------------------------------------------------------------------
@@ -622,30 +719,13 @@ function client {
 
 # ------------------------------------------------------------------------------
 
-function purge {
-  NAME=$1
-  CURRDIR=$(pwd);
-  if ! test -e "${CURRDIR}/api/${NAME}/${NAME}.mk"; then
-    exit 0
-  fi
-  rm -rf ${CURRDIR}/api/${NAME} .tools/cert/${NAME}.* \
-    ${CURRDIR}/api/${NAME}_*
-}
-
-# ------------------------------------------------------------------------------
-
-function uninstall {
-  CURRDIR=$(pwd);
-  rm -rf .tools/apr-2 .tools/json-c \
-  .tools/mongoose .tools/cert
-}
-
-# ------------------------------------------------------------------------------
-
 function main {
   local cmd
   while [[ $# -gt 0 ]]; do
     case "$1" in
+      -b|--build)
+        cmd="build"
+        ;;
       -i|--install)
         cmd="install"
         ;;
@@ -654,9 +734,6 @@ function main {
         ;;
       -s|--service)
         cmd="service"
-        ;;
-      -g|--purge)
-        cmd="purge"
         ;;
       -n|--name)
         name="$2"
