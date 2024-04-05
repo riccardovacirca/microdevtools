@@ -245,9 +245,10 @@ port=""
 
 function usage {
   echo "Usage: mdt [options]"
-  echo "  -b, --build        Build MicroDevTools locally"
-  echo "  -i, --install      Install MicroDevTools"
-  echo "  -u, --uninstall    Uninstall MicroDevTools"
+  echo "  -b, --build     Build MicroDevTools locally"
+  echo "  -i, --install   Install MicroDevTools"
+  echo "  -u, --uninstall Uninstall MicroDevTools"
+  echo "  -c, --create    Create a new application"
   exit 0
 }
 
@@ -271,9 +272,14 @@ function build {
     echo "${MONGOOSE} does not exist."
     exit 0
   fi
+  if [ ! -d "${MICRODEVTOOLS}" ]; then
+    echo "${MICRODEVTOOLS} does not exist."
+    exit 0
+  fi
   rm -rf ${CURRDIR}/.tools/apr-2 && mkdir -p ${CURRDIR}/.tools/apr-2
   rm -rf ${CURRDIR}/.tools/json-c && mkdir -p ${CURRDIR}/.tools/json-c
   rm -rf ${CURRDIR}/.tools/mongoose && mkdir -p ${CURRDIR}/.tools/mongoose
+  rm -rf ${CURRDIR}/.tools/microdevtools && mkdir -p ${CURRDIR}/.tools/microdevtools
   cd $APR && ./buildconf && ./configure --prefix=/tmp/apr-install \
     --with-mysql --with-pgsql --with-sqlite3 --with-odbc && make && \
     make install && mv /tmp/apr-install/include/apr-2 \
@@ -286,11 +292,13 @@ function build {
     && mv /tmp/json-c-install/lib ${CURRDIR}/.tools/json-c/lib \
     && rm -rf /tmp/json-c-install
   cp $MONGOOSE/mongoose.* ${CURRDIR}/.tools/mongoose
+  cp $MICRODEVTOOLS/microdevtools.* ${CURRDIR}/.tools/microdevtools
   cat <<EOF > ${CURRDIR}/.gitignore
 .gitignore
 .tools/apr-2
 .tools/json-c
 .tools/mongoose
+.tools/microdevtools
 EOF
   exit 0
 }
@@ -300,7 +308,7 @@ EOF
 # Example: $ sudo mdt -i
 function install {
   CURRDIR=$(pwd)
-  cp ${CURRDIR}/.tools/mdt /usr/local/bin/mdt
+  cp ${CURRDIR}/mdt /usr/local/bin/mdt
   exit 0
 }
 
@@ -426,14 +434,11 @@ DBD_CONN_S:="host=localhost,port=3306,user=test,pass=test,dbname=test"
 
 CC:=clang
 #-DMG_TLS=MG_TLS_OPENSSL -D_TLS -D_TLS_TWOWAY
-CFLAGS:=-std=gnu99 -D_MONGOOSE \\
-        -D_NATIVE_OBJC_EXCEPTIONS -fconstant-string-class=NSConstantString
-INCLUDES:=-I. -I../.tools -I../.tools/apr-2/include -I../.tools/json-c/include \\
-          -I../.tools/mongoose -I \`gnustep-config --variable=GNUSTEP_SYSTEM_HEADERS\`
-LIBS:=-L../.tools/apr-2/lib -L../.tools/json-c/lib \\
-      -L \`gnustep-config --variable=GNUSTEP_SYSTEM_LIBRARIES\`
+CFLAGS:=-std=gnu99 -D_MONGOOSE -D_NATIVE_OBJC_EXCEPTIONS -fconstant-string-class=NSConstantString
+INCLUDES:=-I. -I../.tools -I../.tools/apr-2/include -I../.tools/json-c/include -I../.tools/mongoose -I../.tools/microdevtools -I \`gnustep-config --variable=GNUSTEP_SYSTEM_HEADERS\`
+LIBS:=-L../.tools/apr-2/lib -L../.tools/json-c/lib -L \`gnustep-config --variable=GNUSTEP_SYSTEM_LIBRARIES\`
 LDFLAGS:=-lapr-2 -ljson-c -lssl -lcrypto -lgnustep-base -lobjc
-SRC:=../.tools/mongoose/mongoose.c ../microdevtools.c main.m
+SRC:=../.tools/mongoose/mongoose.c ../.tools/microdevtools/microdevtools.c main.m
 
 all: debug
 
@@ -478,22 +483,22 @@ int main(int argc, char **argv) {
   struct sigaction sig_action;
   ns_signal_handler(&sig_action, ns_signal_exit);
   apr_status_t rv = apr_initialize();
-  if (rv == APR_SUCCESS) exit(EXIT_FAILURE);
+  if (rv != APR_SUCCESS) exit(EXIT_FAILURE);
   apr_pool_t *mp;
   rv = apr_pool_create(&mp, NULL);
-  if (rv == APR_SUCCESS) exit(EXIT_FAILURE);
+  if (rv != APR_SUCCESS) exit(EXIT_FAILURE);
   ns_server_t *s = ns_server_alloc(mp);
   if (s == NULL) exit(EXIT_FAILURE);
   char *er_msg;
-  s = ns_server_init(mp, &s, argc, argv, &(er_msg));
+  if (!ns_server_init(mp, &s, argc, argv, &(er_msg))) exit(EXIT_FAILURE);
   dbd_pool = NULL;
   if (s->dbd_driver != NULL) {
     if (s->dbd_conn_s != NULL) {
       rv = apr_dbd_init(mp);
       if (rv == APR_SUCCESS) {
-        dbd_pool = ns_dbd_pool_alloc(mp);
-        if (dbd_pool) {
-          dbd_pool = ns_dbd_pool_init(mp, s->dbd_driver, s->dbd_conn_s);
+        if (!ns_dbd_pool_alloc(mp)) exit(EXIT_FAILURE);
+        if (!ns_dbd_pool_init(mp, s->dbd_driver, s->dbd_conn_s)) {
+          exit(EXIT_FAILURE);
         }
       }
     }
@@ -531,10 +536,10 @@ DBD_CONN_S:="host=localhost,port=3306,user=test,pass=test,dbname=test"
 CC:=clang
 #-DMG_TLS=MG_TLS_OPENSSL -D_TLS -D_TLS_TWOWAY
 CFLAGS:=-std=gnu99 -D_MONGOOSE
-INCLUDES:=-I. -I.. -I../.tools/apr-2/include -I../.tools/json-c/include -I../.tools/mongoose
+INCLUDES:=-I. -I.. -I../.tools/apr-2/include -I../.tools/json-c/include -I../.tools/mongoose -I../.tools/microdevtools
 LIBS:=-L../.tools/apr-2/lib -L../.tools/json-c/lib
 LDFLAGS:=-lapr-2 -ljson-c -lssl -lcrypto
-SRC:=../.tools/mongoose/mongoose.c ../microdevtools.c main.c
+SRC:=../.tools/mongoose/mongoose.c ../.tools/microdevtools/microdevtools.c main.c
 
 all: debug
 

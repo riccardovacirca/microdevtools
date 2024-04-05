@@ -1,8 +1,5 @@
 
 install:
-	@.tools/mdt -i
+	@chmod +x mdt && ./mdt -i
 
-uninstall:
-	@.tools/mdt -u
-
-.PHONY: install uninstall
+.PHONY: install
