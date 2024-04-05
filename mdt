@@ -309,11 +309,7 @@ function install {
 # Example: $ sudo mdt -u
 function uninstall {
   CURRDIR=$(pwd);
-  rm -rf ${CURRDIR}/.tools/apr-2 \
-         ${CURRDIR}/.tools/json-c \
-         ${CURRDIR}/.tools/mongoose \
-         ${CURRDIR}/.gitignore \
-         /usr/local/bin/mdt
+  rm -rf /usr/local/bin/mdt
   exit 0
 }
 
