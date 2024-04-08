@@ -295,16 +295,14 @@ curl -i "http://localhost:2310/api/helloworld"
 
 ### Connect to a PostgreSQL database
 Connect to a PostgreSQL database by starting the service with the following additional arguments from the command line:
-```bash
--d pgsql
--D "hostaddr=127.0.0.1 host=localhost port=5432 user=bob password=secret dbname=test"
+```
+-d pgsql -D "hostaddr=127.0.0.1 host=localhost port=5432 user=bob password=secret dbname=test"
 ```
 
 ### Connect to a MySQL/MariaDB database
 Connect to a MySQL/MariaDB database by starting the service with the following additional arguments from the command line:
-```bash
--d mysql
--D "host=127.0.0.1,port=3306,user=bob,pass=secret,dbname=test"
+```
+-d mysql -D "host=127.0.0.1,port=3306,user=bob,pass=secret,dbname=test"
 ```
 
 ### Enable TLS
