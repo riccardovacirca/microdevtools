@@ -363,9 +363,9 @@ echo -e "#endif /* CERT_H */" >> certs.h
 ```bash
 chmod +x cert.sh && ./cert.sh helloworld
 ```
-Add the TLS flags to the CFLAGS:
+Uncomment the following line in the service Makefile:
 ```makefile
-CFLAGS:=-std=gnu99 -D_MONGOOSE -DMG_TLS=MG_TLS_OPENSSL -D_TLS ...
+# TLS:=-DMG_TLS=MG_TLS_OPENSSL -D_TLS
 ```
 Compile and run the HelloWorld microservice (debug version)
 ```bash
