@@ -83,7 +83,6 @@ mkdir -p myapp/microdevtools \
 ```
 
 ### Create a HelloWorld microservice in C
-
 <code>myapp/api/helloworld/helloworld.c</code>
 ```c
 #include "microdevtools.h"
@@ -164,13 +163,14 @@ INCLUDES:=-I. -I../../apr-2/include -I../../json-c/include -I../../mongoose -I..
 LIBS:=-L../../apr-2/lib -L../../json-c/lib
 LDFLAGS:=-lapr-2 -ljson-c -lssl -lcrypto
 SRC:=../../mongoose/mongoose.c ../../microdevtools/microdevtools.c helloworld.c main.c
+# TLS:=-DMG_TLS=MG_TLS_OPENSSL -D_TLS
 
 all:
-	$(eval CFLAGS:=-D_DAEMON $(CFLAGS))
+	$(eval CFLAGS:=$(CFLAGS) -D_DAEMON $(TLS))
 	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
 
 debug:
-	$(eval CFLAGS:=-g -D_DEBUG $(CFLAGS))
+	$(eval CFLAGS:=$(CFLAGS) $(TLS) -g -D_DEBUG)
 	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
 
 run:
@@ -267,13 +267,14 @@ LIBS:=-L../../apr-2/lib -L../../json-c/lib \
       -L `gnustep-config --variable=GNUSTEP_SYSTEM_LIBRARIES`
 LDFLAGS:=-lapr-2 -ljson-c -lssl -lcrypto -lgnustep-base -lobjc
 SRC:=../../mongoose/mongoose.c ../../microdevtools/microdevtools.c helloworld.m main.m
+# TLS:=-DMG_TLS=MG_TLS_OPENSSL -D_TLS
 
 all:
-	$(eval CFLAGS:=-D_DAEMON $(CFLAGS))
+	$(eval CFLAGS:=$(CFLAGS) -D_DAEMON $(TLS))
 	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
 
 debug:
-	$(eval CFLAGS:=-g -D_DEBUG $(CFLAGS))
+	$(eval CFLAGS:=$(CFLAGS) $(TLS) -g -D_DEBUG)
 	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
 
 run:
@@ -298,6 +299,7 @@ Connect to a PostgreSQL database by starting the service with the following addi
 -d pgsql
 -D "hostaddr=127.0.0.1 host=localhost port=5432 user=bob password=secret dbname=test"
 ```
+
 ### Connect to a MySQL/MariaDB database
 Connect to a MySQL/MariaDB database by starting the service with the following additional arguments from the command line:
 ```bash
