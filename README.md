@@ -1,6 +1,7 @@
 # MicroDevTools
 Microservices DevTools
 
+### Table of Contents
 [Install system dependencies](#install-system-dependencies)
 
 ## <a name="install-system-dependencies"></a>Install system dependencies
