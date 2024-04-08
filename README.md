@@ -174,7 +174,7 @@ debug:
 	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
 
 run:
-	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib \
+	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib \
 	./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
 
 .PHONY: all debug run
@@ -277,7 +277,7 @@ debug:
 	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
 
 run:
-	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib \
+	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib \
 	./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
 
 .PHONY: all debug run
