@@ -3,6 +3,7 @@ Microservices DevTools
 
 ### Table of Contents
 [Install system dependencies](#install-system-dependencies)
+[Create a new microservices-based project]()
 
 ## <a name="install-system-dependencies"></a>Install system dependencies
 ```bash
