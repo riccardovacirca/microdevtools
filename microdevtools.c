@@ -9,12 +9,12 @@
  * COMMON
  */
 
-int ns_rand(int l, int h) {
+int mdt_rand(int l, int h) {
   srand(time(NULL));
   return l < h ? (rand() % (h - l + 1)) + l : 0;
 }
 
-int ns_is_empty(const char *s) {
+int mdt_is_empty(const char *s) {
   int rv = 1;
   if (s && (*s != '\0')) {
     apr_size_t l = strlen(s);
@@ -29,7 +29,7 @@ int ns_is_empty(const char *s) {
   return rv;
 }
 
-int ns_is_int(const char *s) {
+int mdt_is_int(const char *s) {
   int rv = 0;
   if (s && (*s != '\0')) {
     char *endp;
@@ -39,7 +39,7 @@ int ns_is_int(const char *s) {
   return rv;
 }
 
-int ns_is_double(const char *s) {
+int mdt_is_double(const char *s) {
   int rv = 0;
   if (s && (*s != '\0')) {
     char *endp;
@@ -49,7 +49,7 @@ int ns_is_double(const char *s) {
   return rv;
 }
 
-int ns_in_string(const char *s, const char *sub) {
+int mdt_in_string(const char *s, const char *sub) {
   int rv = 0;
   if (s && sub) {
     apr_size_t ls, lsub;
@@ -86,7 +86,7 @@ char *ns_str(apr_pool_t *mp, const char *s, apr_size_t sz) {
   char *result = NULL;
   if (mp && s && sz) {
     apr_size_t bf_size = sz;
-    result = ns_buffer(mp, s, &bf_size);
+    result = mdt_buffer(mp, s, &bf_size);
   }
   return result;
 }
@@ -101,7 +101,7 @@ char *ns_trim(apr_pool_t *mp, const char *s) {
     while ((end >= start) && apr_isspace(s[end])) {
       end --;
     }
-    result = ns_str(mp, s + start, end - start + 1);
+    result = mdt_str(mp, s + start, end - start + 1);
   }
   return result;
 }
@@ -230,7 +230,7 @@ char *ns_empty_string_make(apr_pool_t *mp) {
   return result;
 }
 
-apr_array_header_t* ns_split(apr_pool_t *mp, const char *s, const char *sp)
+apr_array_header_t* mdt_split(apr_pool_t *mp, const char *s, const char *sp)
 {
   apr_array_header_t *result = NULL;
   char *str = NULL;
@@ -380,16 +380,16 @@ char *ns_base64_decode(apr_pool_t* mp, const char *s)
   return result;
 }
 
-apr_table_t* ns_args_to_table(apr_pool_t *mp, const char *q)
+apr_table_t* mdt_args_to_table(apr_pool_t *mp, const char *q)
 {
   apr_table_t *result = NULL;
   apr_array_header_t *args, *elts;
-  args = ns_split(mp, q, "&");
+  args = mdt_split(mp, q, "&");
   if (args && args->nelts) {
     result = apr_table_make(mp, args->nelts);
     for (int i = 0; i < args->nelts; i++) {
       const char *arg = APR_ARRAY_IDX(args, i, const char*);
-      elts = ns_split(mp, arg, "=");
+      elts = mdt_split(mp, arg, "=");
       if (elts && elts->nelts == 2) {
         apr_table_set(
           result,
@@ -402,12 +402,12 @@ apr_table_t* ns_args_to_table(apr_pool_t *mp, const char *q)
   return result;
 }
 
-int ns_table_nelts(apr_table_t *t)
+int mdt_table_nelts(apr_table_t *t)
 {
   return t ? (apr_table_elts(t))->nelts : -1;
 }
 
-apr_table_entry_t* ns_table_elt(apr_table_t *t, int i)
+apr_table_entry_t* mdt_table_elt(apr_table_t *t, int i)
 {
   apr_table_entry_t *result = NULL;
   if (t && (i >= 0)) {
@@ -429,10 +429,10 @@ char *ns_datetime(apr_pool_t *mp, apr_time_t t, const char *f)
     if (apr_time_exp_lt(&tm, t) == APR_SUCCESS) {
       fm = apr_pstrdup(mp, f);
       if (fm) {
-        fm = ns_str_replace(mp, ns_str_replace(mp, fm, "Y", "%Y"), "y", "%y");
-        fm = ns_str_replace(mp, ns_str_replace(mp, fm, "m", "%m"), "d", "%d");
-        fm = ns_str_replace(mp, ns_str_replace(mp, fm, "H", "%H"), "h", "%I");
-        fm = ns_str_replace(mp, ns_str_replace(mp, fm, "s", "%S"), "i", "%M");
+        fm = mdt_str_replace(mp, mdt_str_replace(mp, fm, "Y", "%Y"), "y", "%y");
+        fm = mdt_str_replace(mp, mdt_str_replace(mp, fm, "m", "%m"), "d", "%d");
+        fm = mdt_str_replace(mp, mdt_str_replace(mp, fm, "H", "%H"), "h", "%I");
+        fm = mdt_str_replace(mp, mdt_str_replace(mp, fm, "s", "%S"), "i", "%M");
       }
     }
   }
@@ -455,10 +455,10 @@ char *ns_datetime_local(apr_pool_t *mp, apr_time_t t, const char *f)
     if (apr_time_exp_lt(&tm, t) == APR_SUCCESS) {
       fm = apr_pstrdup(mp, f);
       if (fm) {
-        fm = ns_str_replace(mp, ns_str_replace(mp, fm, "Y", "%Y"), "y", "%y");
-        fm = ns_str_replace(mp, ns_str_replace(mp, fm, "m", "%m"), "d", "%d");
-        fm = ns_str_replace(mp, ns_str_replace(mp, fm, "H", "%H"), "h", "%I");
-        fm = ns_str_replace(mp, ns_str_replace(mp, fm, "s", "%S"), "i", "%M");
+        fm = mdt_str_replace(mp, mdt_str_replace(mp, fm, "Y", "%Y"), "y", "%y");
+        fm = mdt_str_replace(mp, mdt_str_replace(mp, fm, "m", "%m"), "d", "%d");
+        fm = mdt_str_replace(mp, mdt_str_replace(mp, fm, "H", "%H"), "h", "%I");
+        fm = mdt_str_replace(mp, mdt_str_replace(mp, fm, "s", "%S"), "i", "%M");
         fm = apr_pstrcat(mp, fm, "%z", NULL);
       }
     }
@@ -489,7 +489,7 @@ char *ns_datetime_utc(apr_pool_t *mp, apr_time_t t, const char *f)
   return result;
 }
 
-int ns_is_dir(const char *d, apr_pool_t *mp)
+int mdt_is_dir(const char *d, apr_pool_t *mp)
 {
   apr_finfo_t finfo;
   return mp && d && (strlen(d) > 0) &&
@@ -497,14 +497,14 @@ int ns_is_dir(const char *d, apr_pool_t *mp)
     (finfo.filetype == APR_DIR);
 }
 
-int ns_is_file(const char *f, apr_pool_t *mp)
+int mdt_is_file(const char *f, apr_pool_t *mp)
 {
   apr_finfo_t finfo;
   return mp && f && (strlen(f) > 0) &&
     (apr_stat(&finfo, f, APR_FINFO_NORM, mp) == APR_SUCCESS);
 }
 
-apr_status_t ns_file_open(apr_file_t **fd, const char *f, apr_int32_t fl, apr_pool_t *mp)
+apr_status_t mdt_file_open(apr_file_t **fd, const char *f, apr_int32_t fl, apr_pool_t *mp)
 {
   apr_status_t result = APR_EGENERAL;
   if (mp && f) {
@@ -513,23 +513,23 @@ apr_status_t ns_file_open(apr_file_t **fd, const char *f, apr_int32_t fl, apr_po
   return result;
 }
 
-apr_status_t ns_file_open_read(apr_file_t **fd, const char *f, apr_pool_t *mp)
+apr_status_t mdt_file_open_read(apr_file_t **fd, const char *f, apr_pool_t *mp)
 {
-  return ns_file_open(fd, f, APR_READ, mp);
+  return mdt_file_open(fd, f, APR_READ, mp);
 }
 
-apr_status_t ns_file_open_append(apr_file_t **fd, const char *f, apr_pool_t *mp)
+apr_status_t mdt_file_open_append(apr_file_t **fd, const char *f, apr_pool_t *mp)
 {
-  return ns_file_open(fd, f, APR_WRITE | APR_CREATE | APR_APPEND, mp);
+  return mdt_file_open(fd, f, APR_WRITE | APR_CREATE | APR_APPEND, mp);
 }
 
-apr_status_t ns_file_open_truncate(apr_file_t **fd, const char *f,
+apr_status_t mdt_file_open_truncate(apr_file_t **fd, const char *f,
                                    apr_pool_t *mp)
 {
-  return ns_file_open(fd, f, APR_WRITE | APR_CREATE | APR_TRUNCATE, mp);
+  return mdt_file_open(fd, f, APR_WRITE | APR_CREATE | APR_TRUNCATE, mp);
 }
 
-apr_size_t ns_file_write(apr_file_t *fd, const char *buf, apr_size_t l)
+apr_size_t mdt_file_write(apr_file_t *fd, const char *buf, apr_size_t l)
 {
   apr_size_t result = 0;
   if (fd && buf && (l > 0)) {
@@ -541,7 +541,7 @@ apr_size_t ns_file_write(apr_file_t *fd, const char *buf, apr_size_t l)
   return result;
 }
 
-apr_size_t ns_file_read(apr_pool_t *mp, apr_file_t *fd, void **buf)
+apr_size_t mdt_file_read(apr_pool_t *mp, apr_file_t *fd, void **buf)
 {
   apr_size_t result = 0;
   if (mp && fd && buf) {
@@ -554,8 +554,8 @@ apr_size_t ns_file_read(apr_pool_t *mp, apr_file_t *fd, void **buf)
     if (fsize <= 0) {
       *buf = NULL;
     } else {
-      if (fsize > NS_MAX_READ_BUFFER) {
-        fsize = NS_MAX_READ_BUFFER;
+      if (fsize > MDT_MAX_READ_BUFFER) {
+        fsize = MDT_MAX_READ_BUFFER;
       }
       *buf = (void*)apr_palloc(mp, fsize);
       if (buf) {
@@ -566,12 +566,12 @@ apr_size_t ns_file_read(apr_pool_t *mp, apr_file_t *fd, void **buf)
   return result;
 }
 
-apr_status_t ns_file_close(apr_file_t *fd)
+apr_status_t mdt_file_close(apr_file_t *fd)
 {
   return apr_file_close(fd);
 }
 
-apr_time_t ns_timestamp(int year, int month, int day, int hour,
+apr_time_t mdt_timestamp(int year, int month, int day, int hour,
                         int minute, int second)
 {
   if (year == 0 && month == 0 && day == 0 && hour == 0 && minute == 0 && second == 0) {
@@ -579,7 +579,7 @@ apr_time_t ns_timestamp(int year, int month, int day, int hour,
   }
   if (year < 1970 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31 ||
     hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59) {
-    return NS_ERROR_TIMESTAMP;
+    return MDT_ERROR_TIMESTAMP;
   }
   apr_time_exp_t timeExp;
   apr_time_t currentTime = apr_time_now(); // Ottieni il tempo corrente
@@ -596,12 +596,12 @@ apr_time_t ns_timestamp(int year, int month, int day, int hour,
   return unixTime;
 }
 
-apr_time_t ns_now()
+apr_time_t mdt_now()
 {
-  return ns_timestamp(0, 0, 0, 0, 0, 0);
+  return mdt_timestamp(0, 0, 0, 0, 0, 0);
 }
 
-apr_table_entry_t* ns_table_entry(apr_table_t *t, int i)
+apr_table_entry_t* mdt_table_entry(apr_table_t *t, int i)
 {
   return (t != NULL) && (i >= 0) && (i < (apr_table_elts(t))->nelts)
     ? &((apr_table_entry_t*)((apr_table_elts(t))->elts))[i]
@@ -616,7 +616,7 @@ char *ns_pipein(apr_pool_t *mp)
   char buf[NS_MAX_READ_BUFFER] = {0};
   apr_size_t l;
   apr_file_t *fd;
-  apr_size_t bytes = NS_MAX_READ_BUFFER - 1;
+  apr_size_t bytes = MDT_MAX_READ_BUFFER - 1;
   apr_status_t st = apr_file_open_stdin(&fd, mp);
   if (st == APR_SUCCESS) {
     st = apr_file_read(fd, buf, &bytes);
@@ -640,7 +640,7 @@ char *ns_env(const char *e, apr_pool_t *mp)
   return mp && e && (apr_env_get(&result, e, mp) == APR_SUCCESS) ? result : NULL;
 }
 
-void ns_daemonize()
+void mdt_daemonize()
 {
   pid_t pid, sid;
   pid = fork();
@@ -677,165 +677,165 @@ void ns_daemonize()
  * JSON
  */
 
-ns_json_pair_t* ns_json_pair_init(apr_pool_t *mp) {
-  ns_json_pair_t *result = NULL;
+mdt_json_pair_t* mdt_json_pair_init(apr_pool_t *mp) {
+  mdt_json_pair_t *result = NULL;
   if (mp != NULL) {
-    if ((result = (ns_json_pair_t*)apr_palloc(mp, sizeof(ns_json_pair_t))) != NULL) {
+    if ((result = (mdt_json_pair_t*)apr_palloc(mp, sizeof(mdt_json_pair_t))) != NULL) {
       //result->pool = mp;
       result->key = NULL;
       result->val = NULL;
-      result->type = NS_JSON_T_ZERO;
+      result->type = MDT_JSON_T_ZERO;
     }
   }
   return result;
 }
 
-ns_json_object_t* ns_json_object_init(apr_pool_t *mp) {
-  return (ns_json_object_t*)apr_array_make(mp, 0, sizeof(ns_json_pair_t*));
+mdt_json_object_t* mdt_json_object_init(apr_pool_t *mp) {
+  return (mdt_json_object_t*)apr_array_make(mp, 0, sizeof(mdt_json_pair_t*));
 }
 
-int ns_json_object_add(apr_pool_t *mp, ns_json_object_t *jo, ns_json_type_t tp,
+int mdt_json_object_add(apr_pool_t *mp, mdt_json_object_t *jo, mdt_json_type_t tp,
                        const char *k, void *v)
 {
   int result = 0;
-  ns_json_pair_t *entry;
+  mdt_json_pair_t *entry;
   if ((mp != NULL) && (jo != NULL) && (tp >= 0)) {
-    if ((entry = ns_json_pair_init(mp)) != NULL) {
+    if ((entry = mdt_json_pair_init(mp)) != NULL) {
       entry->key = k;
       entry->val = v;
       entry->type = tp;
-      APR_ARRAY_PUSH(jo, ns_json_pair_t*) = entry;
+      APR_ARRAY_PUSH(jo, mdt_json_pair_t*) = entry;
       result = 1;
     }
   }
   return result;
 }
 
-ns_json_type_t ns_int_type(apr_int64_t v)
+mdt_json_type_t mdt_int_type(apr_int64_t v)
 {
   if (v < APR_INT32_MIN) {
-    return NS_JSON_T_INT64;
+    return MDT_JSON_T_INT64;
   } else if (v < APR_INT16_MIN) {
-    return NS_JSON_T_INT32;
+    return MDT_JSON_T_INT32;
   } else if (v <= APR_INT16_MAX) {
-    return NS_JSON_T_INT16;
+    return MDT_JSON_T_INT16;
   } else if (v <= APR_UINT16_MAX) {
-    return NS_JSON_T_UINT16;
+    return MDT_JSON_T_UINT16;
   } else if (v <= APR_INT32_MAX) {
-    return NS_JSON_T_INT32;
+    return MDT_JSON_T_INT32;
   } else if (v <= APR_UINT32_MAX) {
-    return NS_JSON_T_UINT32;
+    return MDT_JSON_T_UINT32;
   } else if (v < APR_INT64_MAX) {
-    return NS_JSON_T_INT64;
+    return MDT_JSON_T_INT64;
   } else {
-    return NS_JSON_T_ZERO;
+    return MDT_JSON_T_ZERO;
   }
 }
 
-ns_json_pair_t* ns_json_array_entry_make(apr_pool_t *mp, int type,
+mdt_json_pair_t* mdt_json_array_entry_make(apr_pool_t *mp, int type,
                                          const char *key, json_object *val)
 {
-  ns_json_pair_t *entry = ns_json_pair_init(mp);
+  mdt_json_pair_t *entry = mdt_json_pair_init(mp);
   entry->key = key != NULL ? apr_pstrdup(mp, key) : NULL;
   // Eseguo lo switch dei tipi predefiniti di json-c
   switch (type) {
     case json_type_null: {
-      entry->type = NS_JSON_T_NULL;
+      entry->type = MDT_JSON_T_NULL;
       entry->val = NULL;
     } break;
     case json_type_boolean:{
-      entry->type = NS_JSON_T_BOOLEAN;
+      entry->type = MDT_JSON_T_BOOLEAN;
       entry->val = (void*)apr_palloc(mp, sizeof(char));
       *((char*)entry->val) = json_object_get_boolean(val);
     } break;
     case json_type_double: {
-      entry->type = NS_JSON_T_DOUBLE;
+      entry->type = MDT_JSON_T_DOUBLE;
       entry->val = (void*)apr_palloc(mp, sizeof(double));
       *((double*)entry->val) = json_object_get_double(val);
     } break;
     case json_type_int: {
       apr_uint64_t tmp_u = 0;
       apr_int64_t tmp_i = (apr_int64_t)json_object_get_int64(val);
-      ns_json_type_t int_type = ns_int_type(tmp_i);
+      mdt_json_type_t int_type = mdt_int_type(tmp_i);
       if (!int_type) {
         tmp_u = (apr_uint64_t)json_object_get_uint64(val);
         if (tmp_u > APR_INT64_MAX) {
-          int_type = NS_JSON_T_UINT64;
+          int_type = MDT_JSON_T_UINT64;
         } else {
-          int_type = NS_JSON_T_INT64;
+          int_type = MDT_JSON_T_INT64;
         }
       }
-      if (int_type == NS_JSON_T_INT16) {
-        entry->type = NS_JSON_T_INT16;
+      if (int_type == MDT_JSON_T_INT16) {
+        entry->type = MDT_JSON_T_INT16;
         entry->val = (void*)apr_palloc(mp, sizeof(apr_int16_t));
         *((apr_int16_t*)entry->val) = (apr_int16_t)tmp_i;
-      } else if (int_type == NS_JSON_T_UINT16) {
-        entry->type = NS_JSON_T_UINT16;
+      } else if (int_type == MDT_JSON_T_UINT16) {
+        entry->type = MDT_JSON_T_UINT16;
         entry->val = (void*)apr_palloc(mp, sizeof(apr_uint16_t));
         *((apr_uint16_t*)entry->val) = (apr_uint16_t)tmp_i;
-      } else if (int_type == NS_JSON_T_INT32) {
-        entry->type = NS_JSON_T_INT32;
+      } else if (int_type == MDT_JSON_T_INT32) {
+        entry->type = MDT_JSON_T_INT32;
         entry->val = (void*)apr_palloc(mp, sizeof(apr_int32_t));
         *((apr_int32_t*)entry->val) = (apr_int32_t)tmp_i;
-      } else if (int_type == NS_JSON_T_UINT32) {
-        entry->type = NS_JSON_T_UINT32;
+      } else if (int_type == MDT_JSON_T_UINT32) {
+        entry->type = MDT_JSON_T_UINT32;
         entry->val = (void*)apr_palloc(mp, sizeof(apr_uint32_t));
         *((apr_uint32_t*)entry->val) = (apr_uint32_t)tmp_i;
-      } else if (int_type == NS_JSON_T_INT64) {
-        entry->type = NS_JSON_T_INT64;
+      } else if (int_type == MDT_JSON_T_INT64) {
+        entry->type = MDT_JSON_T_INT64;
         entry->val = (void*)apr_palloc(mp, sizeof(apr_int64_t));
         *((apr_int64_t*)entry->val) = (apr_int64_t)tmp_i;
-      } else if (int_type == NS_JSON_T_UINT64) {
-        entry->type = NS_JSON_T_UINT64;
+      } else if (int_type == MDT_JSON_T_UINT64) {
+        entry->type = MDT_JSON_T_UINT64;
         entry->val = (void*)apr_palloc(mp, sizeof(apr_uint64_t));
         *((apr_uint64_t*)entry->val) = (apr_uint64_t)tmp_u;
       }
     } break;
     case json_type_string: {
-      entry->type = NS_JSON_T_STRING;
+      entry->type = MDT_JSON_T_STRING;
       entry->val = (void*)apr_pstrdup(mp, (const char*)json_object_get_string(val));
     } break;
   }
   return entry;
 }
 
-apr_array_header_t* ns_json_parse(apr_pool_t *mp, json_object *jobj);
+apr_array_header_t* mdt_json_parse(apr_pool_t *mp, json_object *jobj);
 
-apr_array_header_t* ns_json_parse_array(apr_pool_t *mp, json_object *jarr)
+apr_array_header_t* mdt_json_parse_array(apr_pool_t *mp, json_object *jarr)
 {
   int jarr_l;
   enum json_type type;
   //, *jtmp; è stata sostituita dalla seguente riga:
   json_object *jval; 
-  ns_json_pair_t *entry;
+  mdt_json_pair_t *entry;
   apr_array_header_t *res = NULL;
   jarr_l = json_object_array_length(jarr);
   for (int i = 0; i < jarr_l; i ++) {
     jval = json_object_array_get_idx(jarr, i);
     type = json_object_get_type(jval);
     if (type == json_type_array) {
-      entry = ns_json_pair_init(mp);
-      entry->type = NS_JSON_T_ARRAY;
+      entry = mdt_json_pair_init(mp);
+      entry->type = MDT_JSON_T_ARRAY;
       entry->key = NULL;
       entry->val = (void*)ns_json_parse_array(mp, jval);
     } else if (type == json_type_object) {
-      //entry = (ns_json_pair_t*)apr_palloc(mp, sizeof(ns_json_pair_t));
-      entry = ns_json_pair_init(mp);
-      entry->type = NS_JSON_T_OBJECT;
+      //entry = (mdt_json_pair_t*)apr_palloc(mp, sizeof(mdt_json_pair_t));
+      entry = mdt_json_pair_init(mp);
+      entry->type = MDT_JSON_T_OBJECT;
       entry->key = NULL;
       entry->val = (void*)ns_json_parse(mp, jval);
     } else {
-      entry = ns_json_array_entry_make(mp, type, NULL, jval);
+      entry = mdt_json_array_entry_make(mp, type, NULL, jval);
     }
-    if (res == NULL) res = apr_array_make(mp, 0, sizeof(ns_json_pair_t*));
-    APR_ARRAY_PUSH(res, ns_json_pair_t*) = entry;
+    if (res == NULL) res = apr_array_make(mp, 0, sizeof(mdt_json_pair_t*));
+    APR_ARRAY_PUSH(res, mdt_json_pair_t*) = entry;
   }
   return res;
 }
 
-apr_array_header_t* ns_json_parse(apr_pool_t *mp, json_object *jobj)
+apr_array_header_t* mdt_json_parse(apr_pool_t *mp, json_object *jobj)
 {
-  ns_json_pair_t *entry = NULL;
+  mdt_json_pair_t *entry = NULL;
   apr_array_header_t *res = NULL;
   enum json_type type;
   json_object *jtmp;
@@ -844,92 +844,92 @@ apr_array_header_t* ns_json_parse(apr_pool_t *mp, json_object *jobj)
     switch (type) {
       case json_type_object: {
         if (json_object_object_get_ex(jobj, key, &jtmp)) {
-          entry = ns_json_pair_init(mp);
-          entry->type = NS_JSON_T_OBJECT;
+          entry = mdt_json_pair_init(mp);
+          entry->type = MDT_JSON_T_OBJECT;
           entry->key = apr_pstrdup(mp, key);
           entry->val = (void*)ns_json_parse(mp, jtmp);
         }
       } break;
       case json_type_array: {
         if (json_object_object_get_ex(jobj, key, &jtmp)) {
-          entry = ns_json_pair_init(mp);
-          entry->type = NS_JSON_T_ARRAY;
+          entry = mdt_json_pair_init(mp);
+          entry->type = MDT_JSON_T_ARRAY;
           entry->key = apr_pstrdup(mp, key);
           entry->val = (void*)ns_json_parse_array(mp, jtmp);
         }
       } break;
       default: {
-        entry = ns_json_array_entry_make(mp, type, key, val);
+        entry = mdt_json_array_entry_make(mp, type, key, val);
       } break;
     }
-    if (res == NULL) res = apr_array_make(mp, 0, sizeof(ns_json_pair_t*));
-    APR_ARRAY_PUSH(res, ns_json_pair_t*) = entry;
+    if (res == NULL) res = apr_array_make(mp, 0, sizeof(mdt_json_pair_t*));
+    APR_ARRAY_PUSH(res, mdt_json_pair_t*) = entry;
   }
   return res;
 }
 
-apr_array_header_t* ns_json_decode(apr_pool_t *mp, const char *s)
+apr_array_header_t* mdt_json_decode(apr_pool_t *mp, const char *s)
 {
   json_object *jobj;
   apr_array_header_t* result;
   jobj = json_tokener_parse(s);
-  result = ns_json_parse(mp, jobj);
+  result = mdt_json_parse(mp, jobj);
   json_object_put(jobj);
   return result;
 }
 
-const char *ns_json_encode(apr_pool_t *mp, const void *v, ns_json_type_t tp)
+const char *ns_json_encode(apr_pool_t *mp, const void *v, mdt_json_type_t tp)
 {
   int len;
   apr_table_entry_t *e;
   apr_table_t *t;
-  ns_json_pair_t *p;
+  mdt_json_pair_t *p;
   // Dichiaro 2 array temporanei
   apr_array_header_t *obj, *arr = NULL;
   // Inizializzo il valore di ritorno
   const char *result = NULL;
   // Verifico che la memoria sia allocata e il tipo di dato specificato
   if (mp != NULL && tp) {
-    if (v == NULL || tp == NS_JSON_T_NULL) {
+    if (v == NULL || tp == MDT_JSON_T_NULL) {
       // Il dato è una primitiva NULL
-      result = apr_pstrdup(mp, NS_JSON_NULL_S);
-    } else if (tp == NS_JSON_T_BOOLEAN) {
+      result = apr_pstrdup(mp, MDT_JSON_NULL_S);
+    } else if (tp == MDT_JSON_T_BOOLEAN) {
       // Il dato è una primitiva booleana
-      result = apr_pstrdup(mp, *(char*)v ? NS_JSON_TRUE_S : NS_JSON_FALSE_S);
-    } else if (tp == NS_JSON_T_INT16) {
+      result = apr_pstrdup(mp, *(char*)v ? MDT_JSON_TRUE_S : MDT_JSON_FALSE_S);
+    } else if (tp == MDT_JSON_T_INT16) {
       // Il dato è una primitiva intera
       result = apr_psprintf(mp, "%hd", *((apr_int16_t*)v));
-    } else if (tp == NS_JSON_T_UINT16) {
+    } else if (tp == MDT_JSON_T_UINT16) {
       // Il dato è una primitiva intera
       result = apr_psprintf(mp, "%hu", *((apr_uint16_t*)v));
-    } else if (tp == NS_JSON_T_INT32) {
+    } else if (tp == MDT_JSON_T_INT32) {
       // Il dato è una primitiva intera
       result = apr_psprintf(mp, "%d", *((apr_int32_t*)v));
-    } else if (tp == NS_JSON_T_UINT32) {
+    } else if (tp == MDT_JSON_T_UINT32) {
       // Il dato è una primitiva intera
       result = apr_psprintf(mp, "%u", *((apr_uint32_t*)v));
-    } else if (tp == NS_JSON_T_INT64) {
+    } else if (tp == MDT_JSON_T_INT64) {
       // Il dato è una primitiva intera
       result = apr_psprintf(mp, "%" APR_INT64_T_FMT, *((apr_int64_t*)v));
-    } else if (tp == NS_JSON_T_UINT64) {
+    } else if (tp == MDT_JSON_T_UINT64) {
       // Il dato è una primitiva intera
       result = apr_psprintf(mp, "%" APR_UINT64_T_FMT, *((apr_uint64_t*)v));
-    } else if (tp == NS_JSON_T_DOUBLE) {
+    } else if (tp == MDT_JSON_T_DOUBLE) {
       // Il dato è una primitiva double
       result = apr_psprintf(mp, "%0.8lf", *(double*)v);
-    } else if (tp == NS_JSON_T_STRING) {
+    } else if (tp == MDT_JSON_T_STRING) {
       // Il dato è una stringa
       result = apr_psprintf(mp, "\"%s\"", apr_pescape_echo(mp, (const char*)v, 1));
-    } else if (tp == NS_JSON_T_JSON) {
+    } else if (tp == MDT_JSON_T_JSON) {
       // Il dato è una stringa JSON pre-codificata
       result = apr_psprintf(mp, "%s", (const char*)v);
-    } else if (tp == NS_JSON_T_TIMESTAMP) {
+    } else if (tp == MDT_JSON_T_TIMESTAMP) {
       // Il dato è un apr_time_t
       result = apr_psprintf(mp, "%" APR_TIME_T_FMT, (apr_time_t)v);
-    } else if (tp > NS_JSON_T_VECTOR) {
-      // Il dato è un vettore di elementi di tipo (tp - NS_JSON_T_VECTOR)
+    } else if (tp > MDT_JSON_T_VECTOR) {
+      // Il dato è un vettore di elementi di tipo (tp - MDT_JSON_T_VECTOR)
       // La funzione si aspetta un vettore di primitive o di stringhe
-      int type = tp - NS_JSON_T_VECTOR;
+      int type = tp - MDT_JSON_T_VECTOR;
       // Un vettore è una struttura apr_array_header_t di dati dello stesso tipo
       obj = (apr_array_header_t*)v;
       // Verifico che la struttura non sia vuota
@@ -942,59 +942,59 @@ const char *ns_json_encode(apr_pool_t *mp, const void *v, ns_json_type_t tp)
           // Ripeto per ogni elemento del vettore
           for (int i = 0; i < obj->nelts; i ++) {
             switch (type) {
-              case NS_JSON_T_NULL: {
+              case MDT_JSON_T_NULL: {
                 // Aggiungo all'array temporaneo una stringa null
-                APR_ARRAY_PUSH(arr, const char*) = apr_pstrdup(mp, NS_JSON_NULL_S);
+                APR_ARRAY_PUSH(arr, const char*) = apr_pstrdup(mp, MDT_JSON_NULL_S);
               } break;
-              case NS_JSON_T_BOOLEAN: {
+              case MDT_JSON_T_BOOLEAN: {
                 // Estraggo il intero
                 int entry = APR_ARRAY_IDX(obj, i, int);
                 // Aggiungo all'array temporaneo una stringa true o false
-                APR_ARRAY_PUSH(arr, const char*) = apr_pstrdup(mp, entry ? NS_JSON_TRUE_S : NS_JSON_FALSE_S);
+                APR_ARRAY_PUSH(arr, const char*) = apr_pstrdup(mp, entry ? MDT_JSON_TRUE_S : MDT_JSON_FALSE_S);
               } break;
-              case NS_JSON_T_INT16: {
+              case MDT_JSON_T_INT16: {
                 // Estraggo il valore intero
                 apr_int16_t entry = APR_ARRAY_IDX(obj, i, apr_int16_t);
                 // Aggiungo all'array temporaneo il valore intero
                 APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "%hd", entry);
               } break;
-              case NS_JSON_T_UINT16: {
+              case MDT_JSON_T_UINT16: {
                 // Estraggo il valore intero
                 apr_uint16_t entry = APR_ARRAY_IDX(obj, i, apr_uint16_t);
                 // Aggiungo all'array temporaneo il valore intero
                 APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "%hu", entry);
               } break;
-              case NS_JSON_T_INT32: {
+              case MDT_JSON_T_INT32: {
                 // Estraggo il valore intero
                 apr_int32_t entry = APR_ARRAY_IDX(obj, i, apr_int32_t);
                 // Aggiungo all'array temporaneo il valore intero
                 APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "%d", entry);
               } break;
-              case NS_JSON_T_UINT32: {
+              case MDT_JSON_T_UINT32: {
                 // Estraggo il valore intero
                 apr_uint32_t entry = APR_ARRAY_IDX(obj, i, apr_uint32_t);
                 // Aggiungo all'array temporaneo il valore intero
                 APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "%u", entry);
               } break;
-              case NS_JSON_T_INT64: {
+              case MDT_JSON_T_INT64: {
                 // Estraggo il valore intero
                 apr_int64_t entry = APR_ARRAY_IDX(obj, i, apr_int64_t);
                 // Aggiungo all'array temporaneo il valore intero
                 APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "%" APR_INT64_T_FMT, entry);
               } break;
-              case NS_JSON_T_UINT64: {
+              case MDT_JSON_T_UINT64: {
                 // Estraggo il valore intero
                 apr_uint64_t entry = APR_ARRAY_IDX(obj, i, apr_uint64_t);
                 // Aggiungo all'array temporaneo il valore intero
                 APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "%" APR_UINT64_T_FMT, entry);
               } break;
-              case NS_JSON_T_DOUBLE: {
+              case MDT_JSON_T_DOUBLE: {
                 // Estraggo il valore double
                 double entry = APR_ARRAY_IDX(obj, i, double);
                 // Aggiungo all'array temporaneo il valore double
                 APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "%0.8lf", entry);
               } break;
-              case NS_JSON_T_STRING: {
+              case MDT_JSON_T_STRING: {
                 // Estraggo il valore stringa
                 // ------------------------------------------------------------
                 // FIXME: deve essere eseguito l'escape della stringa estratta
@@ -1004,22 +1004,22 @@ const char *ns_json_encode(apr_pool_t *mp, const void *v, ns_json_type_t tp)
                 // Aggiungo all'array temporaneo il valore stringa
                 APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "\"%s\"", apr_pescape_echo(mp, entry, 1));
               } break;
-              case NS_JSON_T_JSON: {
+              case MDT_JSON_T_JSON: {
                 const char *entry = APR_ARRAY_IDX(obj, i, const char*);
                 // Aggiungo all'array temporaneo il valore stringa JSON
                 APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "%s", entry);
               } break;
-              case NS_JSON_T_TIMESTAMP: {
+              case MDT_JSON_T_TIMESTAMP: {
                 // Estraggo il valore apr_time_t
                 apr_time_t entry = APR_ARRAY_IDX(obj, i, apr_time_t);
                 // Aggiungo all'array temporaneo il valore apr_time_t
                 APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "%" APR_TIME_T_FMT, entry);
               } break;
-              case NS_JSON_T_TABLE: {
+              case MDT_JSON_T_TABLE: {
                 apr_table_t *entry = APR_ARRAY_IDX(obj, i, apr_table_t*);
                 APR_ARRAY_PUSH(arr, const char*) =
                   //apr_psprintf(mp, "\"%s\"", apr_pescape_echo(mp, entry, 1));
-                  ns_json_encode(mp, (const void*)entry, NS_JSON_T_TABLE);
+                  mdt_json_encode(mp, (const void*)entry, MDT_JSON_T_TABLE);
               } break;
             }
           }
@@ -1027,7 +1027,7 @@ const char *ns_json_encode(apr_pool_t *mp, const void *v, ns_json_type_t tp)
           // setto il valore di ritorno con la sua versione serializzata
           // in caso contrario il valore di ritorno contiene ancora NULL
           if (arr->nelts > 0) {
-            const char *tmp_s = ns_join(mp, arr, ",");
+            const char *tmp_s = mdt_join(mp, arr, ",");
             if (tmp_s != NULL) {
               result = apr_psprintf(mp, "[%s]", tmp_s);
             }
@@ -1035,7 +1035,7 @@ const char *ns_json_encode(apr_pool_t *mp, const void *v, ns_json_type_t tp)
           }
         }
       }
-    } else if (tp == NS_JSON_T_TABLE) {
+    } else if (tp == MDT_JSON_T_TABLE) {
       t = (apr_table_t*)v;
       if (t && (len = (apr_table_elts(t))->nelts)) {
         if ((arr = apr_array_make(mp, len, sizeof(const char*)))) {
@@ -1047,17 +1047,17 @@ const char *ns_json_encode(apr_pool_t *mp, const void *v, ns_json_type_t tp)
             }
           }
           if (arr->nelts > 0) {
-            const char *tmp_s = ns_join(mp, arr, ",");
+            const char *tmp_s = mdt_join(mp, arr, ",");
             if (tmp_s != NULL) {
               result = apr_psprintf(mp, "{%s}", tmp_s);
             }
           }
         }
       }
-    } else if (tp == NS_JSON_T_OBJECT) {
+    } else if (tp == MDT_JSON_T_OBJECT) {
       // Il dato è un oggetto (ovvero un array associativo)
-      // Un oggetto è una struttura apr_array_header_t di ns_json_pair_t
-      // La struttura ns_json_pair_t contiene informazioni anche sul tipo di dato
+      // Un oggetto è una struttura apr_array_header_t di mdt_json_pair_t
+      // La struttura mdt_json_pair_t contiene informazioni anche sul tipo di dato
       // La funzione richiede che le chiavi dei pair dell'array non siano NULL
       // altrimenti l'elemento non verrà aggiunto all'array temporaneo
       obj = (apr_array_header_t*)v;
@@ -1068,67 +1068,67 @@ const char *ns_json_encode(apr_pool_t *mp, const void *v, ns_json_type_t tp)
           // Ripeto per ogni elemento dell'oggetto
           for (int i = 0; i < obj->nelts; i++) {
             // Estraggo il prossimo pair
-            if ((p = APR_ARRAY_IDX(obj, i, ns_json_pair_t*)) != NULL) {
+            if ((p = APR_ARRAY_IDX(obj, i, mdt_json_pair_t*)) != NULL) {
               if (!p->key) continue;
               switch (p->type) {
-                case NS_JSON_T_NULL: {
+                case MDT_JSON_T_NULL: {
                   // Aggiungo all'array temporaneo una coppia chiave/valore null
-                  APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "\"%s\":%s", p->key, NS_JSON_NULL_S);
+                  APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "\"%s\":%s", p->key, MDT_JSON_NULL_S);
                 } break;
-                case NS_JSON_T_BOOLEAN: {
+                case MDT_JSON_T_BOOLEAN: {
                   // Aggiungo all'array temporaneo una coppia chiave/valore boolean
-                  APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "\"%s\":%s", p->key, *(char*)p->val ? NS_JSON_TRUE_S : NS_JSON_FALSE_S);
+                  APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "\"%s\":%s", p->key, *(char*)p->val ? MDT_JSON_TRUE_S : MDT_JSON_FALSE_S);
                 } break;
-                case NS_JSON_T_INT16: {
+                case MDT_JSON_T_INT16: {
                   // Aggiungo all'array temporaneo una coppia chiave/valore integer
                   APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "\"%s\":%hd", p->key, *(apr_int16_t*)p->val);
                 } break;
-                case NS_JSON_T_UINT16: {
+                case MDT_JSON_T_UINT16: {
                   // Aggiungo all'array temporaneo una coppia chiave/valore integer
                   APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "\"%s\":%hu", p->key, *(apr_uint16_t*)p->val);
                 } break;
-                case NS_JSON_T_INT32: {
+                case MDT_JSON_T_INT32: {
                   // Aggiungo all'array temporaneo una coppia chiave/valore integer
                   APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "\"%s\":%d", p->key, *(apr_int32_t*)p->val);
                 } break;
-                case NS_JSON_T_UINT32: {
+                case MDT_JSON_T_UINT32: {
                   // Aggiungo all'array temporaneo una coppia chiave/valore integer
                   APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "\"%s\":%u", p->key, *(apr_uint32_t*)p->val);
                 } break;
-                case NS_JSON_T_INT64: {
+                case MDT_JSON_T_INT64: {
                   // Aggiungo all'array temporaneo una coppia chiave/valore integer
                   APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "\"%s\":%" APR_INT64_T_FMT, p->key, *(apr_int64_t*)p->val);
                 } break;
-                case NS_JSON_T_UINT64: {
+                case MDT_JSON_T_UINT64: {
                   // Aggiungo all'array temporaneo una coppia chiave/valore integer
                   APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "\"%s\":%" APR_UINT64_T_FMT, p->key, *(apr_uint64_t*)p->val);
                 } break;
-                case NS_JSON_T_TIMESTAMP: {
+                case MDT_JSON_T_TIMESTAMP: {
                   // Aggiungo all'array temporaneo una coppia chiave/valore timestamp
                   APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "\"%s\":%" APR_TIME_T_FMT, p->key, *(apr_time_t*)p->val);
                 } break;
-                case NS_JSON_T_DOUBLE: {
+                case MDT_JSON_T_DOUBLE: {
                   // Aggiungo all'array temporaneo una coppia chiave/valore double
                   APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "\"%s\":%0.8lf", p->key, *(double*)p->val);
                 } break;
-                case NS_JSON_T_STRING: {
+                case MDT_JSON_T_STRING: {
                   // Aggiungo all'array temporaneo una coppia chiave/valore string
                   APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "\"%s\":\"%s\"", p->key, apr_pescape_echo(mp, (const char*)p->val, 1));
                 } break;
-                case NS_JSON_T_JSON: {
+                case MDT_JSON_T_JSON: {
                   // Aggiungo all'array temporaneo una coppia chiave/valore string JSON
                   APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "\"%s\":%s", p->key, (const char*)p->val);
                 } break;
-                case NS_JSON_T_OBJECT: {
+                case MDT_JSON_T_OBJECT: {
                   // Aggiungo all'array temporaneo una coppia chiave/valore object
-                  APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "\"%s\":%s", p->key, ns_json_encode(mp, p->val, NS_JSON_T_OBJECT));
+                  APR_ARRAY_PUSH(arr, const char*) = apr_psprintf(mp, "\"%s\":%s", p->key, mdt_json_encode(mp, p->val, MDT_JSON_T_OBJECT));
                 } break;
                 default: break;
               }
             }
           }
           if (arr->nelts > 0) {
-            const char *tmp_s = ns_join(mp, arr, ",");
+            const char *tmp_s = mdt_join(mp, arr, ",");
             if (tmp_s != NULL) {
               result = apr_psprintf(mp, "{%s}", tmp_s);
             }
@@ -1144,25 +1144,25 @@ const char *ns_json_encode(apr_pool_t *mp, const void *v, ns_json_type_t tp)
  * LOGGER
  */
 
-ns_logger_t* ns_log_alloc(apr_pool_t *mp, apr_proc_mutex_t *m, const char *f,
+mdt_logger_t* mdt_log_alloc(apr_pool_t *mp, apr_proc_mutex_t *m, const char *f,
                           apr_size_t sz)
 {
-  ns_logger_t *result = (ns_logger_t*)apr_palloc(mp, sizeof(ns_logger_t));
+  mdt_logger_t *result = (mdt_logger_t*)apr_palloc(mp, sizeof(mdt_logger_t));
   if (result != NULL) {
     result->pool = mp;
     result->fname = f;
     result->mutex = m;
-    result->max_size = sz ? sz : NS_LOG_MAX_FILE_SIZE;
-    apr_status_t st = ns_file_open_append(&(result->fh), f, mp);
+    result->max_size = sz ? sz : MDT_LOG_MAX_FILE_SIZE;
+    apr_status_t st = mdt_file_open_append(&(result->fh), f, mp);
     if (st != APR_SUCCESS) {
       return NULL;
     }
-    ns_log_rotate(result);
+    mdt_log_rotate(result);
   }
   return result;
 }
 
-void ns_log_rotate(ns_logger_t *l)
+void mdt_log_rotate(mdt_logger_t *l)
 {
   apr_finfo_t finfo;
   // Estraggo i metadati del file di log corrente
@@ -1178,7 +1178,7 @@ void ns_log_rotate(ns_logger_t *l)
   }
   // Genero un nome di file per il file di log originale
   // con il timestamp unix corrente per non sovrascrivere file precedenti
-  apr_time_t ts = ns_now();
+  apr_time_t ts = mdt_now();
   if (ts <= 0) {
     return;
   }
@@ -1200,7 +1200,7 @@ void ns_log_rotate(ns_logger_t *l)
   // Apro un nuovo file con il nome l->fname
   // fh_new e l->fh non puntano allo stesso file
   apr_file_t *fh_new;
-  rv = ns_file_open_truncate(&fh_new, l->fname, l->pool);
+  rv = mdt_file_open_truncate(&fh_new, l->fname, l->pool);
   if (rv != APR_SUCCESS) {
     // Provo a ripristinare il nome del file di ol originale
     apr_file_rename(fname_old, l->fname, l->pool);
@@ -1226,7 +1226,7 @@ void ns_log_rotate(ns_logger_t *l)
   apr_file_close(fh_new);
 }
 
-void ns_log_destroy(ns_logger_t *l)
+void mdt_log_destroy(mdt_logger_t *l)
 {
   if (l != NULL) {
     if (l->fh != NULL) {
@@ -1241,11 +1241,11 @@ void ns_log_destroy(ns_logger_t *l)
  * DBD
  */
 
-ns_dbd_t* ns_dbd_alloc(apr_pool_t *mp)
+mdt_dbd_t* mdt_dbd_alloc(apr_pool_t *mp)
 {
-  ns_dbd_t *result = NULL;
+  mdt_dbd_t *result = NULL;
   if (mp != NULL) {
-    if ((result = (ns_dbd_t*)apr_palloc(mp, sizeof(ns_dbd_t))) != NULL) {
+    if ((result = (mdt_dbd_t*)apr_palloc(mp, sizeof(mdt_dbd_t))) != NULL) {
       result->drv = NULL;
       result->hdl = NULL;
       result->er_msg = NULL;
@@ -1256,7 +1256,7 @@ ns_dbd_t* ns_dbd_alloc(apr_pool_t *mp)
   return result;
 }
 
-int ns_dbd_open(apr_pool_t *mp, ns_dbd_t *d, const char *s, const char *c)
+int mdt_dbd_open(apr_pool_t *mp, mdt_dbd_t *d, const char *s, const char *c)
 {
   int result = 0;
   apr_status_t rv;
@@ -1279,14 +1279,14 @@ int ns_dbd_open(apr_pool_t *mp, ns_dbd_t *d, const char *s, const char *c)
   return result;
 }
 
-const char *ns_dbd_escape(apr_pool_t *mp, ns_dbd_t *d, const char *s)
+const char *ns_dbd_escape(apr_pool_t *mp, mdt_dbd_t *d, const char *s)
 {
   return ((mp == NULL) || (d == NULL) || (s == NULL))
     ? NULL
     : apr_dbd_escape(d->drv, mp, s, d->hdl);
 }
 
-int ns_dbd_query(apr_pool_t *mp, ns_dbd_t *d, const char *sql)
+int mdt_dbd_query(apr_pool_t *mp, mdt_dbd_t *d, const char *sql)
 {
   int result = 0;
   if (mp == NULL || d == NULL || sql == NULL) return -1;
@@ -1299,7 +1299,7 @@ int ns_dbd_query(apr_pool_t *mp, ns_dbd_t *d, const char *sql)
   return result;
 }
 
-int ns_dbd_transaction_start(apr_pool_t *mp, ns_dbd_t *dbd)
+int mdt_dbd_transaction_start(apr_pool_t *mp, mdt_dbd_t *dbd)
 {
   int rv = 1;
   const char *error;
@@ -1313,7 +1313,7 @@ int ns_dbd_transaction_start(apr_pool_t *mp, ns_dbd_t *dbd)
   return (rv == 0 ? 0 : -1);
 }
 
-int ns_dbd_transaction_end(apr_pool_t *mp, ns_dbd_t *dbd)
+int mdt_dbd_transaction_end(apr_pool_t *mp, mdt_dbd_t *dbd)
 {
   int rv = 1;
   const char *error;
@@ -1327,7 +1327,7 @@ int ns_dbd_transaction_end(apr_pool_t *mp, ns_dbd_t *dbd)
   return (rv == 0 ? 0 : -1);
 }
 
-apr_array_header_t* ns_dbd_result_to_array(apr_pool_t *mp, ns_dbd_t *dbd,
+apr_array_header_t* mdt_dbd_result_to_array(apr_pool_t *mp, mdt_dbd_t *dbd,
                                            apr_dbd_results_t *res)
 {
   apr_table_t *rec;
@@ -1349,7 +1349,7 @@ apr_array_header_t* ns_dbd_result_to_array(apr_pool_t *mp, ns_dbd_t *dbd,
           k = apr_dbd_get_name(dbd->drv, res, i);
           v = apr_dbd_get_entry(dbd->drv, row, i);
           apr_table_set(rec, apr_pstrdup(mp, k),
-                        apr_pstrdup(mp, ns_is_empty(v) ? "NULL" : v));
+                        apr_pstrdup(mp, mdt_is_empty(v) ? "NULL" : v));
         }
         APR_ARRAY_PUSH(result, apr_table_t*) = rec;
         rv = apr_dbd_get_row(dbd->drv, mp, res, &row, -1);
@@ -1359,7 +1359,7 @@ apr_array_header_t* ns_dbd_result_to_array(apr_pool_t *mp, ns_dbd_t *dbd,
   return result;
 }
 
-int ns_dbd_prepared_query(apr_pool_t *mp, ns_dbd_t *dbd, const char *sql,
+int mdt_dbd_prepared_query(apr_pool_t *mp, mdt_dbd_t *dbd, const char *sql,
                           apr_table_t *args)
 {
   apr_table_entry_t *arg;
@@ -1372,7 +1372,7 @@ int ns_dbd_prepared_query(apr_pool_t *mp, ns_dbd_t *dbd, const char *sql,
       args_ar = (const char**)apr_palloc(mp, sizeof(const char*)*nelts);
       if (args_ar != NULL) {
         for (int i = 0; i < nelts; i++) {
-          arg = ns_table_entry(args, i);
+          arg = mdt_table_entry(args, i);
           if (arg != NULL) {
             args_ar[i] = apr_pstrdup(mp, arg->val);
             if (args_ar[i] == NULL) {
@@ -1399,7 +1399,7 @@ int ns_dbd_prepared_query(apr_pool_t *mp, ns_dbd_t *dbd, const char *sql,
   return result;
 }
 
-// int ns_dbd_prepared_query(apr_pool_t *mp, ns_dbd_t *dbd,
+// int mdt_dbd_prepared_query(apr_pool_t *mp, mdt_dbd_t *dbd,
 //                           const char *sql, const char **args, int sz) {
   
 //   const char *err;
@@ -1423,7 +1423,7 @@ int ns_dbd_prepared_query(apr_pool_t *mp, ns_dbd_t *dbd, const char *sql,
 //   return result;
 // }
 
-apr_array_header_t* ns_dbd_prepared_select(apr_pool_t *mp, ns_dbd_t *dbd,
+apr_array_header_t* mdt_dbd_prepared_select(apr_pool_t *mp, mdt_dbd_t *dbd,
                                            const char *sql, apr_table_t *args)
 {
   int rv, nelts;
@@ -1437,7 +1437,7 @@ apr_array_header_t* ns_dbd_prepared_select(apr_pool_t *mp, ns_dbd_t *dbd,
     if ((nelts = apr_table_elts(args)->nelts) > 0) {
       if ((args_ar = (char**)apr_palloc(mp, sizeof(char*)*nelts)) != NULL) {
         for (int i = 0; i < nelts; i++) {
-          if ((arg = ns_table_entry(args, i)) != NULL) {
+          if ((arg = mdt_table_entry(args, i)) != NULL) {
             if ((args_ar[i] = apr_psprintf(mp, "%s", arg->val)) == NULL) {
               return NULL;
             }
@@ -1456,14 +1456,14 @@ apr_array_header_t* ns_dbd_prepared_select(apr_pool_t *mp, ns_dbd_t *dbd,
           dbd->er_msg = apr_psprintf(mp, "%s", err);
           return NULL;
         }
-        result = ns_dbd_result_to_array(mp, dbd, res);
+        result = mdt_dbd_result_to_array(mp, dbd, res);
       }
     }
   }
   return result;
 }
 
-apr_array_header_t* ns_dbd_select(apr_pool_t *mp, ns_dbd_t *d, const char *sql)
+apr_array_header_t* mdt_dbd_select(apr_pool_t *mp, mdt_dbd_t *d, const char *sql)
 {
   int rv, err;
   apr_dbd_results_t *res = NULL;
@@ -1492,7 +1492,7 @@ apr_array_header_t* ns_dbd_select(apr_pool_t *mp, ns_dbd_t *d, const char *sql)
               k = apr_dbd_get_name(d->drv, res, i);
               v = apr_dbd_get_entry(d->drv, row, i);
               apr_table_set(rec, apr_pstrdup(mp, k),
-                            apr_pstrdup(mp, ns_is_empty(v) ? "NULL" : v));
+                            apr_pstrdup(mp, mdt_is_empty(v) ? "NULL" : v));
             }
             APR_ARRAY_PUSH(result, apr_table_t*) = rec;
             rv = apr_dbd_get_row(d->drv, mp, res, &row, -1);
@@ -1504,11 +1504,11 @@ apr_array_header_t* ns_dbd_select(apr_pool_t *mp, ns_dbd_t *d, const char *sql)
   return result;
 }
 
-int ns_dbd_num_records(apr_array_header_t *r) {
+int mdt_dbd_num_records(apr_array_header_t *r) {
   return (int)(r != NULL ? r->nelts : 0);
 }
 
-int ns_dbd_num_columns(apr_array_header_t *r) {
+int mdt_dbd_num_columns(apr_array_header_t *r) {
   int result = 0;
   apr_table_t *rec;
   if (r && r->nelts) {
@@ -1519,7 +1519,7 @@ int ns_dbd_num_columns(apr_array_header_t *r) {
   return result;
 }
 
-apr_array_header_t* ns_dbd_column_names(apr_pool_t *mp, apr_array_header_t *r)
+apr_array_header_t* mdt_dbd_column_names(apr_pool_t *mp, apr_array_header_t *r)
 {
   int nelts;
   apr_table_entry_t* e;
@@ -1541,7 +1541,7 @@ apr_array_header_t* ns_dbd_column_names(apr_pool_t *mp, apr_array_header_t *r)
   return result;
 }
 
-apr_table_t* ns_dbd_record(apr_array_header_t *r, int i)
+apr_table_t* mdt_dbd_record(apr_array_header_t *r, int i)
 {
   return (r != NULL) && r->nelts && (i <= r->nelts-1)
     ? APR_ARRAY_IDX(r, i, apr_table_t*)
@@ -1555,22 +1555,22 @@ const char *ns_dbd_field_value(apr_array_header_t *res, int i, const char *k)
   return apr_table_get(rec, k);
 }
 
-int ns_dbd_field_set(apr_array_header_t *r, int i, const char *k, const char *v) {
+int mdt_dbd_field_set(apr_array_header_t *r, int i, const char *k, const char *v) {
   if (r == NULL || r->nelts <= 0 || i > (r->nelts-1)) return 1;
   apr_table_t* t = APR_ARRAY_IDX(r, i, apr_table_t*);
   apr_table_set(t, k, v);
   return 0;
 }
 
-int ns_dbd_close(ns_dbd_t *d) {
+int mdt_dbd_close(mdt_dbd_t *d) {
   return d == NULL ? 0 : apr_dbd_close(d->drv, d->hdl);
 }
 
-const char *ns_dbd_driver_name(ns_dbd_t *dbd) {
+const char *ns_dbd_driver_name(mdt_dbd_t *dbd) {
   return dbd == NULL ? NULL : apr_dbd_name(dbd->drv);
 }
 
-const char *ns_dbd_error(ns_dbd_t *d) {
+const char *ns_dbd_error(mdt_dbd_t *d) {
   return (d == NULL) ? NULL : d->er_msg;
 }
 
@@ -1578,11 +1578,11 @@ const char *ns_dbd_error(ns_dbd_t *d) {
  * HTTP REQUEST
  */
 
-ns_http_request_t* ns_http_request_alloc(apr_pool_t *mp)
+mdt_http_request_t* mdt_http_request_alloc(apr_pool_t *mp)
 {
-  ns_http_request_t *result = NULL;
+  mdt_http_request_t *result = NULL;
   if (mp) {
-    result = (ns_http_request_t*)apr_palloc(mp, sizeof(ns_http_request_t));
+    result = (mdt_http_request_t*)apr_palloc(mp, sizeof(mdt_http_request_t));
     if (result) {
       result->pool = mp;
       result->args = NULL;
@@ -1601,44 +1601,44 @@ ns_http_request_t* ns_http_request_alloc(apr_pool_t *mp)
   return result;
 }
 
-apr_table_t *ns_http_request_validate_args(ns_http_request_t *r,
-                                           ns_request_validator_t *vd,
+apr_table_t *ns_http_request_validate_args(mdt_http_request_t *r,
+                                           mdt_request_validator_t *vd,
                                            int nargs) {
   int is_valid;
   const char *curr_v;
   apr_table_t *result = apr_table_make(r->pool, nargs);
   if (r && r->args) {
     for (int i = 0; i < nargs; ++i) {
-      ns_request_validator_t v = vd[i];
+      mdt_request_validator_t v = vd[i];
       curr_v = apr_table_get(r->args, v.key);
       if (curr_v == NULL) {
         continue;
       }
       is_valid = 0;
-      if (v.type == NS_REQUEST_T_INT) {
-        is_valid = ns_is_int(curr_v);
-      } else if (v.type == NS_REQUEST_T_DOUBLE) {
-        is_valid = ns_is_double(curr_v);
-      } else if (v.type == NS_REQUEST_T_STRING) {
+      if (v.type == MDT_REQUEST_T_INT) {
+        is_valid = mdt_is_int(curr_v);
+      } else if (v.type == MDT_REQUEST_T_DOUBLE) {
+        is_valid = mdt_is_double(curr_v);
+      } else if (v.type == MDT_REQUEST_T_STRING) {
         is_valid = !ns_is_empty(curr_v);
-      } else if (v.type == NS_REQUEST_T_PASSWORD) {
+      } else if (v.type == MDT_REQUEST_T_PASSWORD) {
         is_valid = !ns_is_empty(curr_v);
-      } else if (v.type == NS_REQUEST_T_DATE) { // yyyy-mm-dd
+      } else if (v.type == MDT_REQUEST_T_DATE) { // yyyy-mm-dd
         if (!ns_is_empty(curr_v) && strlen(curr_v) == 10) {
-          apr_array_header_t *curr_v_ar = ns_split(r->pool, curr_v, "-");
+          apr_array_header_t *curr_v_ar = mdt_split(r->pool, curr_v, "-");
           if (curr_v_ar && curr_v_ar->nelts == 3) {
             const char *y = APR_ARRAY_IDX(curr_v_ar, 0, const char*);
             const char *m = APR_ARRAY_IDX(curr_v_ar, 1, const char*);
             const char *d = APR_ARRAY_IDX(curr_v_ar, 2, const char*);
-            is_valid = strlen(y) == 4 && ns_is_int(y) &&
-                       strlen(m) == 2 && ns_is_int(m) &&
-                       strlen(d) == 2 && ns_is_int(d);
+            is_valid = strlen(y) == 4 && mdt_is_int(y) &&
+                       strlen(m) == 2 && mdt_is_int(m) &&
+                       strlen(d) == 2 && mdt_is_int(d);
           }
         }
       }
       if (is_valid) {
-        if (v.filter == NS_REQUEST_F_MD5) {
-          curr_v = ns_md5(r->pool, curr_v);
+        if (v.filter == MDT_REQUEST_F_MD5) {
+          curr_v = mdt_md5(r->pool, curr_v);
         }
         apr_table_set(result, v.key, curr_v);
       }
@@ -1647,8 +1647,8 @@ apr_table_t *ns_http_request_validate_args(ns_http_request_t *r,
   return result;
 }
 
-apr_table_t* ns_http_request_validate_multipart_args(ns_http_request_t *r,
-                                                     ns_request_validator_t *vd,
+apr_table_t* mdt_http_request_validate_multipart_args(mdt_http_request_t *r,
+                                                     mdt_request_validator_t *vd,
                                                      int nargs) {
   apr_table_t *result = NULL;
   if (r && vd && nargs) {
@@ -1656,7 +1656,7 @@ apr_table_t* ns_http_request_validate_multipart_args(ns_http_request_t *r,
     const char *req_v;
     result = apr_table_make(r->pool, nargs);
     for (int i = 0; i < nargs; ++i) {
-      ns_request_validator_t v = vd[i];
+      mdt_request_validator_t v = vd[i];
       for (int j = 0; j < r->multipart_data->nelts; ++j) {
         apr_table_t *entry = APR_ARRAY_IDX(r->multipart_data, j, apr_table_t*);
         if (!entry) {
@@ -1671,30 +1671,30 @@ apr_table_t* ns_http_request_validate_multipart_args(ns_http_request_t *r,
           continue;
         }
         is_valid = 0;
-        if (v.type == NS_REQUEST_T_INT) {
-          is_valid = ns_is_int(req_v);
-        } else if (v.type == NS_REQUEST_T_DOUBLE) {
-          is_valid = ns_is_double(req_v);
-        } else if (v.type == NS_REQUEST_T_STRING) {
+        if (v.type == MDT_REQUEST_T_INT) {
+          is_valid = mdt_is_int(req_v);
+        } else if (v.type == MDT_REQUEST_T_DOUBLE) {
+          is_valid = mdt_is_double(req_v);
+        } else if (v.type == MDT_REQUEST_T_STRING) {
           is_valid = !ns_is_empty(req_v);
-        } else if (v.type == NS_REQUEST_T_PASSWORD) {
+        } else if (v.type == MDT_REQUEST_T_PASSWORD) {
           is_valid = !ns_is_empty(req_v);
-        } else if (v.type == NS_REQUEST_T_DATE) { // yyyy-mm-dd
+        } else if (v.type == MDT_REQUEST_T_DATE) { // yyyy-mm-dd
           if (!ns_is_empty(req_v) && strlen(req_v) == 10) {
-            apr_array_header_t *req_v_ar = ns_split(r->pool, req_v, "-");
+            apr_array_header_t *req_v_ar = mdt_split(r->pool, req_v, "-");
             if (req_v_ar && req_v_ar->nelts == 3) {
               const char *y = APR_ARRAY_IDX(req_v_ar, 0, const char*);
               const char *m = APR_ARRAY_IDX(req_v_ar, 1, const char*);
               const char *d = APR_ARRAY_IDX(req_v_ar, 2, const char*);
-              is_valid = strlen(y) == 4 && ns_is_int(y) &&
-                         strlen(m) == 2 && ns_is_int(m) &&
-                         strlen(d) == 2 && ns_is_int(d);
+              is_valid = strlen(y) == 4 && mdt_is_int(y) &&
+                         strlen(m) == 2 && mdt_is_int(m) &&
+                         strlen(d) == 2 && mdt_is_int(d);
             }
           }
         }
         if (is_valid) {
-          if (v.filter == NS_REQUEST_F_MD5) {
-            req_v = ns_md5(r->pool, req_v);
+          if (v.filter == MDT_REQUEST_F_MD5) {
+            req_v = mdt_md5(r->pool, req_v);
           }
           apr_table_set(result, v.key, req_v);
         }
@@ -1708,10 +1708,10 @@ apr_table_t* ns_http_request_validate_multipart_args(ns_http_request_t *r,
  * HTTP RESPONSE
  */
 
-ns_http_response_t* ns_http_response_alloc(apr_pool_t *mp) {
-  ns_http_response_t *result = NULL;
+mdt_http_response_t* mdt_http_response_alloc(apr_pool_t *mp) {
+  mdt_http_response_t *result = NULL;
   if (mp) {
-    result = (ns_http_response_t*)apr_palloc(mp, sizeof(ns_http_response_t));
+    result = (mdt_http_response_t*)apr_palloc(mp, sizeof(mdt_http_response_t));
   }
   if (result) {
     result->pool = mp;
@@ -1723,27 +1723,27 @@ ns_http_response_t* ns_http_response_alloc(apr_pool_t *mp) {
   return result;
 }
 
-void ns_http_response_hd_set(ns_http_response_t *r, const char *k, const char *v) {
+void mdt_http_response_hd_set(mdt_http_response_t *r, const char *k, const char *v) {
   if (r && k && v) {
     apr_table_set(r->headers, k, v);
   }
 }
 
-const char *ns_http_response_hd_get(ns_http_response_t *r, const char *k) {
+const char *ns_http_response_hd_get(mdt_http_response_t *r, const char *k) {
   return r && k ? apr_table_get(r->headers, k) : NULL;
 }
 
-const char *ns_http_response_hd_serialize(ns_http_response_t *r) {
+const char *ns_http_response_hd_serialize(mdt_http_response_t *r) {
   const char *result = NULL;
   do {
     if (!r) break;
-    int nelts = ns_table_nelts(r->headers);
+    int nelts = mdt_table_nelts(r->headers);
     if (nelts <= 0) break;
     apr_table_entry_t *e;
-    e = ns_table_entry(r->headers, 0);
+    e = mdt_table_entry(r->headers, 0);
     result = apr_psprintf(r->pool, "%s: %s\r\n", e->key, e->val);
     for (int i = 1; i < nelts; i++) {
-      e = ns_table_entry(r->headers, i);
+      e = mdt_table_entry(r->headers, i);
       if (e) {
         char *h = apr_psprintf(r->pool, "%s: %s\r\n", e->key, e->val);
         result = apr_pstrcat(r->pool, result, h, NULL);
@@ -1753,7 +1753,7 @@ const char *ns_http_response_hd_serialize(ns_http_response_t *r) {
   return result;
 }
 
-void ns_http_response_buffer_set(ns_http_response_t *r, void *buf, size_t sz) {
+void mdt_http_response_buffer_set(mdt_http_response_t *r, void *buf, size_t sz) {
   if (r && buf && sz) {
     r->size = sz;
     r->buffer = apr_palloc(r->pool, sz);
@@ -1767,10 +1767,10 @@ void ns_http_response_buffer_set(ns_http_response_t *r, void *buf, size_t sz) {
  * SERVICE
  */
 
-ns_service_t* ns_alloc(apr_pool_t *mp) {
-  ns_service_t *result = NULL;
+mdt_service_t* mdt_alloc(apr_pool_t *mp) {
+  mdt_service_t *result = NULL;
   if (mp) {
-    result = (ns_service_t*)apr_palloc(mp, sizeof(ns_service_t));
+    result = (mdt_service_t*)apr_palloc(mp, sizeof(mdt_service_t));
   }
   if (result) {
     result->pool = mp;
@@ -1784,7 +1784,7 @@ ns_service_t* ns_alloc(apr_pool_t *mp) {
   return result;
 }
 
-void ns_route(ns_service_t *s, const char *mth, const char *uri, ns_route_t fn) {
+void mdt_route(mdt_service_t *s, const char *mth, const char *uri, mdt_route_t fn) {
   if (s && mth && uri && fn) {
     if (s->response && !s->response->status) {
       if (s->request) {
@@ -1798,7 +1798,7 @@ void ns_route(ns_service_t *s, const char *mth, const char *uri, ns_route_t fn) 
   }
 }
 
-void ns_printf(ns_service_t *s, const char *fmt, ...) {
+void mdt_printf(mdt_service_t *s, const char *fmt, ...) {
   va_list args;
   va_start(args, fmt);
   // Calcolo la lunghezza della stringa formattata
@@ -1876,7 +1876,7 @@ char *ns_hmac_encode(const char *key, const char *s, apr_size_t sz) {
     unsigned char hmac[EVP_MAX_MD_SIZE];
     HMAC(EVP_sha256(), key, strlen(key), (const unsigned char*)s, sz, hmac, &hmac_len);
     HMAC(EVP_sha256(), key, strlen(key), (const unsigned char*)s, sz, hmac, &hmac_len);
-    result = ns_jwt_base64_encode(hmac, hmac_len);
+    result = mdt_jwt_base64_encode(hmac, hmac_len);
   }
   return result;
 }
@@ -1887,16 +1887,16 @@ char *ns_jwt_token_create(apr_pool_t *mp, apr_table_t *claims, const char *key) 
   char *enc_head = NULL, *enc_hmac = NULL, *enc_claims = NULL;
   const unsigned char head[] = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}";
   if (mp && claims && key) {
-    claims_str = ns_json_encode(mp, claims, NS_JSON_T_TABLE);
+    claims_str = mdt_json_encode(mp, claims, MDT_JSON_T_TABLE);
   }
   if (claims_str) {
-    enc_head = ns_jwt_base64_encode(head, 27);
+    enc_head = mdt_jwt_base64_encode(head, 27);
   }
   if (enc_head) {
-    enc_claims = ns_jwt_base64_encode((const unsigned char*)claims_str, strlen(claims_str));
+    enc_claims = mdt_jwt_base64_encode((const unsigned char*)claims_str, strlen(claims_str));
   }
   if (enc_claims) {
-    enc_hmac = ns_hmac_encode(key, enc_claims, strlen(enc_claims));
+    enc_hmac = mdt_hmac_encode(key, enc_claims, strlen(enc_claims));
   }
   if (enc_hmac) {
     result = apr_psprintf(mp, "%s.%s.%s", enc_head, enc_claims, enc_hmac);
@@ -1905,12 +1905,12 @@ char *ns_jwt_token_create(apr_pool_t *mp, apr_table_t *claims, const char *key) 
   return result;
 }
 
-int ns_jwt_token_validate(apr_pool_t *mp, const char *tok, const char *key) {
+int mdt_jwt_token_validate(apr_pool_t *mp, const char *tok, const char *key) {
   int result = 0;
   const char *enc_claims = NULL, *enc_hmac = NULL, *gen_hmac = NULL;
   apr_array_header_t *tok_ar;
   if (mp && tok && key) {
-    tok_ar = ns_split(mp, tok, ".");
+    tok_ar = mdt_split(mp, tok, ".");
   }
   if (tok_ar && tok_ar->nelts == 3) {
     enc_claims = APR_ARRAY_IDX(tok_ar, 1, const char*);
@@ -1930,9 +1930,9 @@ int ns_jwt_token_validate(apr_pool_t *mp, const char *tok, const char *key) {
 
 // -----------------------------------------------------------------------------
 
-ns_server_t* ns_server_alloc(apr_pool_t *mp) {
-  ns_server_t *s;
-  s = (ns_server_t*)apr_palloc(mp, sizeof(ns_server_t));
+mdt_server_t* mdt_server_alloc(apr_pool_t *mp) {
+  mdt_server_t *s;
+  s = (mdt_server_t*)apr_palloc(mp, sizeof(mdt_server_t));
   if (s != NULL) {
     s->pool = mp;
     s->host = NULL;
@@ -1951,7 +1951,7 @@ ns_server_t* ns_server_alloc(apr_pool_t *mp) {
   return s;
 }
 
-void ns_server_destroy(ns_server_t *s) {
+void mdt_server_destroy(mdt_server_t *s) {
   if (s && s->pool) {
     if (s->logger) {
       if (s->logger->mutex) {
@@ -1964,49 +1964,49 @@ void ns_server_destroy(ns_server_t *s) {
   }
 }
 
-int ns_dbd_pool_alloc(apr_pool_t *mp) {
-  dbd_pool = (ns_dbd_pool_t*)apr_palloc(mp, sizeof(ns_dbd_pool_t));
+int mdt_dbd_pool_alloc(apr_pool_t *mp) {
+  dbd_pool = (mdt_dbd_pool_t*)apr_palloc(mp, sizeof(mdt_dbd_pool_t));
   return dbd_pool != NULL;
 }
 
-void ns_dbd_pool_add(apr_pool_t *mp, const char *drv, const char *conn_s) {
-  ns_dbd_t *dbd = ns_dbd_alloc(mp);
+void mdt_dbd_pool_add(apr_pool_t *mp, const char *drv, const char *conn_s) {
+  mdt_dbd_t *dbd = mdt_dbd_alloc(mp);
   if (dbd != NULL) {
-    if (ns_dbd_open(mp, dbd, drv, conn_s)) {
-      APR_ARRAY_PUSH(dbd_pool->connections, ns_dbd_t*) = dbd;
+    if (mdt_dbd_open(mp, dbd, drv, conn_s)) {
+      APR_ARRAY_PUSH(dbd_pool->connections, mdt_dbd_t*) = dbd;
       dbd_pool->counter ++;
     }
   }
 }
 
-int ns_dbd_pool_init(apr_pool_t *mp, const char *drv, const char *conn_s) {
+int mdt_dbd_pool_init(apr_pool_t *mp, const char *drv, const char *conn_s) {
   int result = 0;
   if (dbd_pool != NULL) {
     dbd_pool->counter = -1;
     dbd_pool->connections = apr_array_make(
-      mp, NS_DBD_POOL_INIT_SIZE, sizeof(ns_dbd_t*));
+      mp, MDT_DBD_POOL_INIT_SIZE, sizeof(mdt_dbd_t*));
     if (dbd_pool->connections != NULL) {
       apr_status_t rv;
       rv = apr_proc_mutex_create(
         &(dbd_pool->mutex), "dbd_pool_mutex", APR_LOCK_DEFAULT, mp);
       if (rv == APR_SUCCESS) {
-        for (int i = 0; i < NS_DBD_POOL_INIT_SIZE; ++i) {
-          ns_dbd_pool_add(mp, drv, conn_s);
+        for (int i = 0; i < MDT_DBD_POOL_INIT_SIZE; ++i) {
+          mdt_dbd_pool_add(mp, drv, conn_s);
         }
-        result = dbd_pool->connections->nelts == NS_DBD_POOL_INIT_SIZE;
+        result = dbd_pool->connections->nelts == MDT_DBD_POOL_INIT_SIZE;
       }
     }
   }
   return result;
 }
 
-ns_dbd_t* ns_dbd_pool_get() {
-  ns_dbd_t *dbd = NULL;
+mdt_dbd_t* mdt_dbd_pool_get() {
+  mdt_dbd_t *dbd = NULL;
   apr_status_t rv = apr_proc_mutex_lock(dbd_pool->mutex);
   if (rv == APR_SUCCESS) {
     if (dbd_pool->connections->nelts > 0) {
       if (dbd_pool->counter >= 0) {
-        dbd = APR_ARRAY_IDX(dbd_pool->connections, dbd_pool->counter, ns_dbd_t*);
+        dbd = APR_ARRAY_IDX(dbd_pool->connections, dbd_pool->counter, mdt_dbd_t*);
         dbd_pool->counter --;
       }
     }
@@ -2015,12 +2015,12 @@ ns_dbd_t* ns_dbd_pool_get() {
   return dbd;
 }
 
-void ns_dbd_pool_release() {
+void mdt_dbd_pool_release() {
   if (dbd_pool != NULL && dbd_pool->connections != NULL) {
     apr_status_t rv = apr_proc_mutex_lock(dbd_pool->mutex);
     if (rv == APR_SUCCESS) {
       if (dbd_pool->connections->nelts > 0) {
-        if (dbd_pool->counter < NS_DBD_POOL_INIT_SIZE - 1) {
+        if (dbd_pool->counter < MDT_DBD_POOL_INIT_SIZE - 1) {
           dbd_pool->counter ++;
         }
       }
@@ -2029,15 +2029,15 @@ void ns_dbd_pool_release() {
   }
 }
 
-void ns_dbd_pool_destroy() {
+void mdt_dbd_pool_destroy() {
   if (dbd_pool != NULL) {
     apr_status_t rv = apr_proc_mutex_lock(dbd_pool->mutex);
     if (rv == APR_SUCCESS) {
       if (dbd_pool->connections != NULL && dbd_pool->connections->nelts > 0) {
-        for (int i = 0; i < NS_DBD_POOL_INIT_SIZE; ++i) {
-          ns_dbd_t *dbd = APR_ARRAY_IDX(dbd_pool->connections, i, ns_dbd_t*);
+        for (int i = 0; i < MDT_DBD_POOL_INIT_SIZE; ++i) {
+          mdt_dbd_t *dbd = APR_ARRAY_IDX(dbd_pool->connections, i, mdt_dbd_t*);
           if (dbd != NULL && dbd->drv && dbd->hdl) {
-            ns_dbd_close(dbd);
+            mdt_dbd_close(dbd);
           }
         }
       }
@@ -2046,7 +2046,7 @@ void ns_dbd_pool_destroy() {
   }
 }
 
-void ns_http_request_headers_set(apr_pool_t *mp, ns_http_request_t *rq, struct mg_http_message *hm) {
+void mdt_http_request_headers_set(apr_pool_t *mp, mdt_http_request_t *rq, struct mg_http_message *hm) {
   apr_table_t *headers = NULL;
   size_t i, max = sizeof(hm->headers) / sizeof(hm->headers[0]);
   for (i = 0; i < max && hm->headers[i].name.len > 0; i++) {
@@ -2072,14 +2072,14 @@ void ns_http_request_headers_set(apr_pool_t *mp, ns_http_request_t *rq, struct m
   }
 }
 
-apr_table_t* ns_http_request_args_parse(apr_pool_t *mp, const char *s, const char *sp1, const char *sp2) {
+apr_table_t* mdt_http_request_args_parse(apr_pool_t *mp, const char *s, const char *sp1, const char *sp2) {
   apr_table_t *result = NULL;
   if (mp && s && sp1 && sp2) {
-    apr_array_header_t *ar = ns_split(mp, s, sp1);
+    apr_array_header_t *ar = mdt_split(mp, s, sp1);
     if (ar && ar->nelts > 0) {
       for (int i = 0; i < ar->nelts; i++ ) {
         const char *entry = APR_ARRAY_IDX(ar, i, const char*);
-        apr_array_header_t *pair = ns_split(mp, entry, sp2);
+        apr_array_header_t *pair = mdt_split(mp, entry, sp2);
         if (pair && pair->nelts > 0) {
           if (!result) {
             result = apr_table_make(mp, 1);
@@ -2091,8 +2091,8 @@ apr_table_t* ns_http_request_args_parse(apr_pool_t *mp, const char *s, const cha
           char *trm_k, *trm_v;
           k = apr_pstrdup(mp, APR_ARRAY_IDX(pair, 0, const char*));
           v = apr_pstrdup(mp, APR_ARRAY_IDX(pair, 1, const char*));
-          trm_k = ns_trim(mp, k);
-          trm_v = ns_trim(mp, v);
+          trm_k = mdt_trim(mp, k);
+          trm_v = mdt_trim(mp, v);
           apr_table_set(result, trm_k, trm_v);
         }
       }
@@ -2101,40 +2101,40 @@ apr_table_t* ns_http_request_args_parse(apr_pool_t *mp, const char *s, const cha
   return result;
 }
 
-apr_table_t* ns_http_request_cookies_parse(apr_pool_t *mp, struct mg_http_message *hm) {
+apr_table_t* mdt_http_request_cookies_parse(apr_pool_t *mp, struct mg_http_message *hm) {
   apr_table_t *result = NULL;
   struct mg_str *cookies = mg_http_get_header(hm, "Cookie");
   if (cookies != NULL) {
-    result = ns_http_request_args_parse(mp, cookies->ptr, ";", "=");
+    result = mdt_http_request_args_parse(mp, cookies->ptr, ";", "=");
   }
   return result;
 }
 
-apr_table_t* ns_http_query_string_parse(apr_pool_t*mp, struct mg_http_message *hm) {
+apr_table_t* mdt_http_query_string_parse(apr_pool_t*mp, struct mg_http_message *hm) {
   apr_table_t *result = NULL;
   if (hm->query.len > 0) {
-    const char *query = ns_str(mp, hm->query.ptr, hm->query.len);
-    result = ns_http_request_args_parse(mp, query, "&", "=");
+    const char *query = mdt_str(mp, hm->query.ptr, hm->query.len);
+    result = mdt_http_request_args_parse(mp, query, "&", "=");
   }
   return result;
 }
 
-apr_table_t* ns_http_request_body_parse(apr_pool_t*mp, struct mg_http_message *hm) {
+apr_table_t* mdt_http_request_body_parse(apr_pool_t*mp, struct mg_http_message *hm) {
   apr_table_t *result = NULL;
   if (hm->body.len > 0) {
-    const char *body = ns_str(mp, hm->body.ptr, hm->body.len);
-    result = ns_http_request_args_parse(mp, body, "&", "=");
+    const char *body = mdt_str(mp, hm->body.ptr, hm->body.len);
+    result = mdt_http_request_args_parse(mp, body, "&", "=");
   }
   return result;
 }
 
-// void ns_signal_exit(int signum) {
+// void mdt_signal_exit(int signum) {
 //   if (signum == SIGTERM || signum == SIGINT) {
 //     server_run = 0;
 //   }
 // }
 
-void ns_signal_handler(struct sigaction *sig_action, sighd_t cb) {
+void mdt_signal_handler(struct sigaction *sig_action, sighd_t cb) {
   sig_action->sa_handler = cb;
   sigemptyset(&sig_action->sa_mask);
   sig_action->sa_flags = 0;
@@ -2142,7 +2142,7 @@ void ns_signal_handler(struct sigaction *sig_action, sighd_t cb) {
   sigaction(SIGINT, sig_action, NULL);
 }
 
-int ns_http_request_multipart_parse(apr_pool_t *mp, ns_http_request_t *rq, struct mg_connection *c, struct mg_http_message *hm) {
+int mdt_http_request_multipart_parse(apr_pool_t *mp, mdt_http_request_t *rq, struct mg_connection *c, struct mg_http_message *hm) {
   char *err;
   apr_size_t fsize;
   const char *fname, *forig, *fpath;
@@ -2161,9 +2161,9 @@ int ns_http_request_multipart_parse(apr_pool_t *mp, ns_http_request_t *rq, struc
         mp, "%.*s", (int)part.filename.len, part.filename.ptr);
       fsize = (apr_size_t)part.body.len;
       fpath = apr_psprintf(mp, "%s/%s", "/tmp", forig);
-      rv = ns_file_open_truncate(&fd, fpath, mp);
+      rv = mdt_file_open_truncate(&fd, fpath, mp);
       if (rv == APR_SUCCESS) {
-        fsize = ns_file_write(fd, part.body.ptr, fsize);
+        fsize = mdt_file_write(fd, part.body.ptr, fsize);
         apr_table_set(entry, "file_name", fname);
         apr_table_set(entry, "file_path", fpath);
       }
@@ -2180,7 +2180,7 @@ int ns_http_request_multipart_parse(apr_pool_t *mp, ns_http_request_t *rq, struc
   return rq->multipart_data->nelts > 0;
 }
 
-void ns_http_request_handler(struct mg_connection *c, int ev, void *ev_data) {
+void mdt_http_request_handler(struct mg_connection *c, int ev, void *ev_data) {
   struct state_t {
     struct flag_t {
       int ev_data, fn_data, init, pool, logger, request, method, uri, query,
@@ -2189,7 +2189,7 @@ void ns_http_request_handler(struct mg_connection *c, int ev, void *ev_data) {
     } flag;
     int error;
     apr_pool_t *pool;
-    ns_server_t *server;
+    mdt_server_t *server;
     struct mg_http_message *hm;
     const char *er_msg;
   } st = {
@@ -2221,9 +2221,9 @@ void ns_http_request_handler(struct mg_connection *c, int ev, void *ev_data) {
       st.flag.fn_data = c->fn_data != NULL;
       if ((st.error = !st.flag.fn_data)) break;
       // Server data
-      st.server = (ns_server_t*)c->fn_data;
+      st.server = (mdt_server_t*)c->fn_data;
       if (DEBUG) {
-        ns_log((st.server)->logger, "INFO", "Client connected");
+        mdt_log((st.server)->logger, "INFO", "Client connected");
       }
       {
         apr_status_t rv;
@@ -2232,68 +2232,68 @@ void ns_http_request_handler(struct mg_connection *c, int ev, void *ev_data) {
         st.flag.init = (rv == APR_SUCCESS);
         if ((st.error = !st.flag.init)) break;
         if (DEBUG) {
-          ns_log((st.server)->logger, "INFO", "Service APR initialized");
+          mdt_log((st.server)->logger, "INFO", "Service APR initialized");
         }
         // Memory pool allocation
         rv = apr_pool_create(&st.pool, NULL);
         st.flag.pool = (rv == APR_SUCCESS);
         if ((st.error = !st.flag.pool)) break;
         if (DEBUG) {
-          ns_log((st.server)->logger, "INFO", "Service pool created");
+          mdt_log((st.server)->logger, "INFO", "Service pool created");
         }
       }
       // Service allocation
-      ns_service_t* sv = ns_alloc(st.pool);
+      mdt_service_t* sv = mdt_alloc(st.pool);
       st.flag.service = sv != NULL;
       if ((st.error = !st.flag.service)) break;
       if (DEBUG) {
-        ns_log((st.server)->logger, "INFO", "Service data struct allocated");
+        mdt_log((st.server)->logger, "INFO", "Service data struct allocated");
       }
       // Logger
       sv->logger = (st.server)->logger;
       st.flag.logger = sv->logger != NULL;
       if ((st.error = !st.flag.logger)) break;
       if (DEBUG) {
-        ns_log((st.server)->logger, "INFO", "Service logger initialized");
+        mdt_log((st.server)->logger, "INFO", "Service logger initialized");
       }
       // Request
-      sv->request = ns_http_request_alloc(st.pool);
+      sv->request = mdt_http_request_alloc(st.pool);
       st.flag.request = sv->request != NULL;
       if ((st.error = !st.flag.request)) break;
       if (DEBUG) {
-        ns_log((st.server)->logger, "INFO", "Service HTTP request allocated");
+        mdt_log((st.server)->logger, "INFO", "Service HTTP request allocated");
       }
       // Request headers
-      ns_http_request_headers_set(st.pool, sv->request, st.hm);
+      mdt_http_request_headers_set(st.pool, sv->request, st.hm);
       if (DEBUG) {
-        ns_log((st.server)->logger, "INFO", "HTTP request headers parsed");
+        mdt_log((st.server)->logger, "INFO", "HTTP request headers parsed");
       }
       // Request method
       st.flag.method = (st.hm)->method.len > 0;
       if ((st.error = !st.flag.method)) break;
-      sv->request->method = ns_str(
+      sv->request->method = mdt_str(
         st.pool, (st.hm)->method.ptr, (st.hm)->method.len);
       if (DEBUG) {
-        ns_log((st.server)->logger, "INFO", "HTTP request method parsed");
+        mdt_log((st.server)->logger, "INFO", "HTTP request method parsed");
       }
       // Request URI
       st.flag.uri = (st.hm)->uri.len > 0;
       if ((st.error = !st.flag.uri)) break;
-      sv->request->uri = ns_str(st.pool, (st.hm)->uri.ptr, (st.hm)->uri.len);
+      sv->request->uri = mdt_str(st.pool, (st.hm)->uri.ptr, (st.hm)->uri.len);
       if (DEBUG) {
-        ns_log((st.server)->logger, "INFO", "HTTP request uri parsed");
+        mdt_log((st.server)->logger, "INFO", "HTTP request uri parsed");
       }
       // Request query string
       if (strcmp(sv->request->method, "GET") == 0) {
         if ((st.hm)->query.len) {
-          sv->request->query = ns_str(
+          sv->request->query = mdt_str(
             st.pool, (st.hm)->query.ptr, (st.hm)->query.len);
           st.flag.query = sv->request->query != NULL;
           if ((st.error = !st.flag.query)) break;
-          sv->request->args = ns_http_query_string_parse(sv->pool, st.hm);
+          sv->request->args = mdt_http_query_string_parse(sv->pool, st.hm);
           if (sv->request->args) {
             if (DEBUG) {
-              ns_log((st.server)->logger, "INFO", "HTTP query string parsed");
+              mdt_log((st.server)->logger, "INFO", "HTTP query string parsed");
             }
           }
         } else {
@@ -2302,13 +2302,13 @@ void ns_http_request_handler(struct mg_connection *c, int ev, void *ev_data) {
       }
       // Request body
       if ((st.hm)->body.len) {
-        sv->request->body = ns_str(st.pool, (st.hm)->body.ptr, (st.hm)->body.len);
+        sv->request->body = mdt_str(st.pool, (st.hm)->body.ptr, (st.hm)->body.len);
         st.flag.body = sv->request->body != NULL;
         if ((st.error = !st.flag.body)) break;
-        sv->request->args = ns_http_request_body_parse(sv->pool, st.hm);
+        sv->request->args = mdt_http_request_body_parse(sv->pool, st.hm);
         if (sv->request->args) {
           if (DEBUG) {
-            ns_log((st.server)->logger, "INFO", "HTTP body parsed");
+            mdt_log((st.server)->logger, "INFO", "HTTP body parsed");
           }
         }
       } else {
@@ -2318,12 +2318,12 @@ void ns_http_request_handler(struct mg_connection *c, int ev, void *ev_data) {
         // Request multipart data
         const char *ctype;
         ctype = apr_table_get(sv->request->headers, "Content-Type");
-        if (ns_in_string(ctype, "multipart/form-data")) {
+        if (mdt_in_string(ctype, "multipart/form-data")) {
           st.flag.multipart =
-            ns_http_request_multipart_parse(st.pool, sv->request, c, st.hm);
+            mdt_http_request_multipart_parse(st.pool, sv->request, c, st.hm);
           if ((st.error = !st.flag.multipart)) break;
           if (DEBUG) {
-            ns_log((st.server)->logger, "INFO", "HTTP request multipart parsed");
+            mdt_log((st.server)->logger, "INFO", "HTTP request multipart parsed");
           }
         } else {
           st.flag.multipart = 1;
@@ -2341,51 +2341,51 @@ void ns_http_request_handler(struct mg_connection *c, int ev, void *ev_data) {
         }
       }
       // Response
-      sv->response = ns_http_response_alloc(st.pool);
+      sv->response = mdt_http_response_alloc(st.pool);
       st.flag.response = sv->response != NULL;
       if ((st.error = !st.flag.response)) break;
       if (DEBUG) {
-        ns_log((st.server)->logger, "INFO", "HTTP response allocated");
+        mdt_log((st.server)->logger, "INFO", "HTTP response allocated");
       }
       // Default response HTTP header Content-Type
-      ns_http_response_hd_set(sv->response, "Content-Type", "text/plain");
+      mdt_http_response_hd_set(sv->response, "Content-Type", "text/plain");
       if (DEBUG) {
-        ns_log((st.server)->logger, "INFO", "HTTP response Content-Type defined");
+        mdt_log((st.server)->logger, "INFO", "HTTP response Content-Type defined");
       }
       // DBD connection
       if ((st.server)->dbd_driver && (st.server)->dbd_conn_s) {
         if (DEBUG) {
-          ns_log((st.server)->logger, "INFO", "DBD connection configured");
+          mdt_log((st.server)->logger, "INFO", "DBD connection configured");
         }
-        sv->dbd = ns_dbd_pool_get();
+        sv->dbd = mdt_dbd_pool_get();
         st.flag.dbd = sv->dbd != NULL;
         if ((st.error = !st.flag.dbd)) break;
         if (DEBUG) {
-          ns_log((st.server)->logger, "INFO", "DBD connection opened");
+          mdt_log((st.server)->logger, "INFO", "DBD connection opened");
         }
         st.flag.dbd_handler = sv->dbd->drv != NULL && sv->dbd->hdl != NULL;
         if ((st.error = !st.flag.dbd_handler)) break;
         if (DEBUG) {
-          ns_log((st.server)->logger, "INFO", "DBD handler initialized.");
+          mdt_log((st.server)->logger, "INFO", "DBD handler initialized.");
         }
       }
       // ---------------
       // Service handler
       // ---------------
-      ns_handler(sv);
+      mdt_handler(sv);
       st.er_msg = sv->er_msg;
       st.flag.handler = st.er_msg == NULL;
       if ((st.error = !st.flag.handler)) break;
       if (DEBUG) {
-        ns_log((st.server)->logger, "INFO", "Service handler executed.");
+        mdt_log((st.server)->logger, "INFO", "Service handler executed.");
       }
-      ns_dbd_pool_release();
+      mdt_dbd_pool_release();
       if (DEBUG) {
-        ns_log((st.server)->logger, "INFO", "DBD connection released.");
+        mdt_log((st.server)->logger, "INFO", "DBD connection released.");
       }
       // Response headers
       const char *http_hd;
-      http_hd = ns_http_response_hd_serialize(sv->response);
+      http_hd = mdt_http_response_hd_serialize(sv->response);
       st.flag.resp_headers = http_hd != NULL;
       if ((st.error = !st.flag.resp_headers)) break;
       // Default HTTP response status (404 - Not Found)
@@ -2395,7 +2395,7 @@ void ns_http_request_handler(struct mg_connection *c, int ev, void *ev_data) {
       if (sv->response->status != 200) {
         // Not 200 OK response
         const char *ctype;
-        ctype = ns_http_response_hd_get(sv->response, "Content-Type");
+        ctype = mdt_http_response_hd_get(sv->response, "Content-Type");
         if (ctype) {
           ctype = apr_psprintf(st.pool, "Content-Type: %s\r\n", ctype);
         }
@@ -2470,7 +2470,7 @@ void ns_http_request_handler(struct mg_connection *c, int ev, void *ev_data) {
   }
 }
 
-int ns_cmd_args_parse(ns_server_t *s, int argc, char *argv[], char **er_msg) {
+int mdt_cmd_args_parse(mdt_server_t *s, int argc, char *argv[], char **er_msg) {
   struct state_t {
     struct flag_t {
       int input, arg_format, host, port, log_file;
@@ -2533,7 +2533,7 @@ int ns_cmd_args_parse(ns_server_t *s, int argc, char *argv[], char **er_msg) {
   return st.result;
 }
 
-int ns_server_init(apr_pool_t *mp, ns_server_t **s, int argc, char *argv[], char **er_msg) {
+int mdt_server_init(apr_pool_t *mp, mdt_server_t **s, int argc, char *argv[], char **er_msg) {
   struct state_t {
     struct flag_t {
       int input, args, addr, mutex, logger;
@@ -2549,7 +2549,7 @@ int ns_server_init(apr_pool_t *mp, ns_server_t **s, int argc, char *argv[], char
     *er_msg = NULL;
     st.flag.input = mp != NULL && *s != NULL && argv != NULL && argc > 1;
     if ((st.error = !st.flag.input)) break;
-    st.flag.args = ns_cmd_args_parse(*s, argc, argv, er_msg);
+    st.flag.args = mdt_cmd_args_parse(*s, argc, argv, er_msg);
     if ((st.error = !st.flag.args)) break;
     (*s)->addr = apr_psprintf(mp, "%s:%s", (*s)->host, (*s)->port);
     if (TLS) {
@@ -2563,7 +2563,7 @@ int ns_server_init(apr_pool_t *mp, ns_server_t **s, int argc, char *argv[], char
     rv = apr_proc_mutex_create(&(st.log_mutex), "log_mutex", APR_LOCK_DEFAULT, mp);
     st.flag.mutex = rv == APR_SUCCESS;
     if ((st.error = !st.flag.mutex)) break;
-    (*s)->logger = ns_log_alloc(mp, st.log_mutex, (*s)->log_file, 0);
+    (*s)->logger = mdt_log_alloc(mp, st.log_mutex, (*s)->log_file, 0);
     st.flag.logger = (*s)->logger != NULL;
     if ((st.error = !st.flag.logger)) break;
     st.result = 1;
@@ -2590,20 +2590,19 @@ int ns_server_init(apr_pool_t *mp, ns_server_t **s, int argc, char *argv[], char
 
 
 
+#ifdef _MDT_PDF
 
-#ifdef _ZET_HAS_PDF
+#define MDT_PDF_PADDING_W 6
+#define MDT_PDF_PADDING_H 12
 
-#define PADDING_W 6
-#define PADDING_H 12
-
-void z_pdf_add_row(double *pos, double x, double y, double h) {
+static void mdt_pdf_add_row(double *pos, double x, double y, double h) {
   pos[0] = x ? pos[0] + x : 10.0;
-  pos[1] = y ? (pos[3] ? pos[1] + pos[3] + PADDING_H : pos[1] + y) : 30.0;
+  pos[1] = y ? (pos[3] ? pos[1] + pos[3] + MDT_PDF_PADDING_H : pos[1] + y) : 30.0;
   pos[2] = h ? h : 30.0;
   if (pos[3]) pos[3] = 0;
 }
 
-cairo_surface_t *z_pdf_scale_image(cairo_surface_t *s, double w, double h) {
+static cairo_surface_t *z_pdf_scale_image(cairo_surface_t *s, double w, double h) {
   cairo_surface_t *res;
   cairo_t *cr;
   double ww, hh;
@@ -2619,15 +2618,15 @@ cairo_surface_t *z_pdf_scale_image(cairo_surface_t *s, double w, double h) {
   return res;
 }
 
-void z_pdf_set_col_border(cairo_t *cr, double *pos, double w, double size, const char *color) {
+static void mdt_pdf_set_col_border(cairo_t *cr, double *pos, double w, double size, const char *color) {
   cairo_set_line_width(cr, size);
   cairo_set_line_join(cr, CAIRO_LINE_JOIN_MITER);
-  cairo_set_source_rgb(cr, z_ctoi(color[0]), z_ctoi(color[1]), z_ctoi(color[2]));
+  cairo_set_source_rgb(cr, mdt_ctoi(color[0]), mdt_ctoi(color[1]), mdt_ctoi(color[2]));
   cairo_rectangle(cr, pos[0], pos[1], w, pos[2]);
   cairo_stroke(cr);
 }
 
-void z_pdf_set_col_borders(cairo_t *cr, const char *border_pos, double *pos, double w) {
+static void mdt_pdf_set_col_borders(cairo_t *cr, const char *border_pos, double *pos, double w) {
   if (border_pos[0] == '1') {
     cairo_move_to(cr, pos[0], pos[1]);
     cairo_line_to(cr, pos[0] + w, pos[1]);
@@ -2647,13 +2646,13 @@ void z_pdf_set_col_borders(cairo_t *cr, const char *border_pos, double *pos, dou
   cairo_stroke(cr);
 }
 
-void z_pdf_col_fill_text(apr_pool_t*mp, cairo_t *cr, double *pos,
+static void mdt_pdf_col_fill_text(apr_pool_t*mp, cairo_t *cr, double *pos,
                           const char *color, const char *font, float size,
                           int wrap, const char *data, double *bord_y, int count) {
   apr_array_header_t *text_ar;
   char *text;
   double y;
-  cairo_set_source_rgb(cr, z_ctoi(color[0]), z_ctoi(color[1]), z_ctoi(color[2]));
+  cairo_set_source_rgb(cr, mdt_ctoi(color[0]), mdt_ctoi(color[1]), mdt_ctoi(color[2]));
   cairo_select_font_face(cr, font, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
   cairo_set_font_size(cr, size);
   if (wrap) {
@@ -2667,18 +2666,18 @@ void z_pdf_col_fill_text(apr_pool_t*mp, cairo_t *cr, double *pos,
         count ++;
       }
     }
-    text_ar = z_split(mp, text, "\r");
+    text_ar = mdt_split(mp, text, "\r");
   } else {
-    text_ar = z_split(mp, data, "\r");
+    text_ar = mdt_split(mp, data, "\r");
   }
   if (text_ar->nelts <= 1) {
-    cairo_move_to(cr, pos[0] + PADDING_W, pos[1] + PADDING_H);
+    cairo_move_to(cr, pos[0] + MDT_PDF_PADDING_W, pos[1] + MDT_PDF_PADDING_H);
     cairo_show_text(cr, data);
   } else {
-    y = pos[1] + PADDING_H;
+    y = pos[1] + MDT_PDF_PADDING_H;
     int pos_3 = 0;
     for (int i = 0; i < text_ar->nelts; i++) {
-      cairo_move_to(cr, pos[0] + PADDING_W, y);
+      cairo_move_to(cr, pos[0] + MDT_PDF_PADDING_W, y);
       cairo_show_text(cr, APR_ARRAY_IDX(text_ar, i, const char*));
       y += 10;
       pos_3 += 10;
@@ -2686,22 +2685,22 @@ void z_pdf_col_fill_text(apr_pool_t*mp, cairo_t *cr, double *pos,
     if (pos_3) {
 
       pos[3] = pos_3;
-      bord_y[count-1] = pos[3] + PADDING_H;
+      bord_y[count-1] = pos[3] + MDT_PDF_PADDING_H;
     }
   }
 }
 
-void z_pdf_col_fill_image(cairo_t *cr, double *pos, const char *data, double w, double h) {
+static void mdt_pdf_col_fill_image(cairo_t *cr, double *pos, const char *data, double w, double h) {
   cairo_surface_t *image, *scaled;
   image = cairo_image_surface_create_from_png(data);
-  scaled = z_pdf_scale_image(image, w, h);
+  scaled = mdt_pdf_scale_image(image, w, h);
   cairo_set_source_surface(cr, scaled, pos[0], pos[1]);
   cairo_paint(cr);
   cairo_surface_destroy(image);
   cairo_surface_destroy(scaled);
 }
 
-void z_pdf_add_col(apr_pool_t *mp, cairo_t *cr, double *pos, apr_array_header_t *meta, const char *data, double *bord_y, int count) {
+static void mdt_pdf_add_col(apr_pool_t *mp, cairo_t *cr, double *pos, apr_array_header_t *meta, const char *data, double *bord_y, int count) {
   const char *col_tp, *col_w, *bg_color, *font_sz, *font_cl, *font_name, *text_wrap, *img_w, *img_h;
   int contains_text, contains_image;
   col_tp = APR_ARRAY_IDX(meta, 0, const char*);
@@ -2716,15 +2715,15 @@ void z_pdf_add_col(apr_pool_t *mp, cairo_t *cr, double *pos, apr_array_header_t 
   contains_text = col_tp[0] == 't';
   contains_image = col_tp[0] == 'i';
   if (contains_text) {
-    z_pdf_col_fill_text(mp, cr, pos, font_cl, font_name,
+    mdt_pdf_col_fill_text(mp, cr, pos, font_cl, font_name,
                          atof(font_sz), atoi(text_wrap), data, bord_y, count);
   } else if (contains_image) {
-    z_pdf_col_fill_image(cr, pos, data, (double)atof(img_w), (double)atof(img_h));
+    mdt_pdf_col_fill_image(cr, pos, data, (double)atof(img_w), (double)atof(img_h));
   }
   pos[0] = pos[0] + atof(col_w);
 }
 
-void z_pdf_add_col_border(apr_pool_t *mp, cairo_t *cr, double *pos, apr_array_header_t *meta) {
+static void mdt_pdf_add_col_border(apr_pool_t *mp, cairo_t *cr, double *pos, apr_array_header_t *meta) {
   const char *col_w, *border_pos, *border_sz, *border_tp, *border_cl;
   int have_all_borders;
   col_w = APR_ARRAY_IDX(meta, 1, const char*);
@@ -2734,16 +2733,16 @@ void z_pdf_add_col_border(apr_pool_t *mp, cairo_t *cr, double *pos, apr_array_he
   border_cl = APR_ARRAY_IDX(meta, 5, const char*);
   have_all_borders = strcmp(border_pos, "1111") == 0;
   if (!have_all_borders) {
-    z_pdf_set_col_borders(cr, border_pos, pos, atof(col_w));
+    mdt_pdf_set_col_borders(cr, border_pos, pos, atof(col_w));
   } else {
-    z_pdf_set_col_border(cr, pos, atof(col_w), atof(border_sz), border_cl);
+    mdt_pdf_set_col_border(cr, pos, atof(col_w), atof(border_sz), border_cl);
   }
   pos[0] = pos[0] + atof(col_w);
 }
 
 /** @example  const char *buffer;
-              z_file_read(mp, "pdf_file.txt", &buffer);
-              z_pdf_create(mp, buffer, "pdf_file.pdf", 504, 648);
+              mdt_file_read(mp, "pdf_file.txt", &buffer);
+              mdt_pdf_create(mp, buffer, "pdf_file.pdf", 504, 648);
 
     @note     Righe e colonne del PDF vengono create con una iterazione.
               L'array pos conserva lo stato della posizione nel documento PDF
@@ -2756,7 +2755,7 @@ void z_pdf_add_col_border(apr_pool_t *mp, cairo_t *cr, double *pos, apr_array_he
   */
 
 // Renderizza una pagina del documento PDF
-void z_pdf_add_page(apr_pool_t *mp, cairo_t *dst_cr, apr_array_header_t *page_ar, double h) {
+static void mdt_pdf_add_page(apr_pool_t *mp, cairo_t *dst_cr, apr_array_header_t *page_ar, double h) {
   double pos[5] = {0}, bord_y[16] = {0};
   const char *page_entry, *meta, *data, *meta_type;
   apr_array_header_t *page_entry_ar = NULL, *meta_ar;
@@ -2772,14 +2771,14 @@ void z_pdf_add_page(apr_pool_t *mp, cairo_t *dst_cr, apr_array_header_t *page_ar
       page_entry = APR_ARRAY_IDX(page_ar, i, const char*);
       if (page_entry != NULL) {
         // Splitto rispetto al carattere '|'
-        page_entry_ar = z_split(mp, page_entry, "|");
+        page_entry_ar = mdt_split(mp, page_entry, "|");
         if (page_entry_ar != NULL) {
           // L'elemento 0 contiene i metadati
           meta = APR_ARRAY_IDX(page_entry_ar, 0, const char*);
           // L'elemento 1 contiene i dati
           data = APR_ARRAY_IDX(page_entry_ar, 1, const char*);
           // Splitto i metadati rispetto al carattere ';'
-          meta_ar = z_split(mp, meta, ";");
+          meta_ar = mdt_split(mp, meta, ";");
           // L'elemento 0 dei metadati definisce una riga (r) o una colonna
           meta_type = APR_ARRAY_IDX(meta_ar, 0, const char*);
           if (meta_type[0] == 'r') {
@@ -2788,7 +2787,7 @@ void z_pdf_add_page(apr_pool_t *mp, cairo_t *dst_cr, apr_array_header_t *page_ar
             // Aggiungo una riga alla pagina calcolandone le dimensioni
             // in base a  quelle della riga corrente (per l'altezza) e della riga
             // precedente (per il posizionamento)
-            z_pdf_add_row(pos, 0, prev_row_h, row_h);
+            mdt_pdf_add_row(pos, 0, prev_row_h, row_h);
             // Registro l'altezza di riga per l'utilizzo
             // nella renderizzazione della riga successiva
             prev_row_h = row_h;
@@ -2797,7 +2796,7 @@ void z_pdf_add_page(apr_pool_t *mp, cairo_t *dst_cr, apr_array_header_t *page_ar
           }
           else {
             // L'elemento corrente non è una riga, aggiungo una colonna
-            z_pdf_add_col(mp, dst_cr, pos, meta_ar, data, &bord_y[0], count_bord_y);
+            mdt_pdf_add_col(mp, dst_cr, pos, meta_ar, data, &bord_y[0], count_bord_y);
           }
         }
       }
@@ -2812,11 +2811,11 @@ void z_pdf_add_page(apr_pool_t *mp, cairo_t *dst_cr, apr_array_header_t *page_ar
       // leggo la prossima riga
       page_entry = APR_ARRAY_IDX(page_ar, i, const char*);
       // Splitto rispetto al carattere '|'
-      page_entry_ar = z_split(mp, page_entry, "|");
+      page_entry_ar = mdt_split(mp, page_entry, "|");
       // L'elemento 0 contiene i metadati
       meta = APR_ARRAY_IDX(page_entry_ar, 0, const char*);
       // splitto i metadati rispetto al carattere ';'
-      meta_ar = z_split(mp, meta, ";");
+      meta_ar = mdt_split(mp, meta, ";");
       // l'elemento 0 dei metadati indica il riferimento a una riga
       meta_type = APR_ARRAY_IDX(meta_ar, 0, const char*);
       if (meta_type[0] == 'r') {
@@ -2825,12 +2824,12 @@ void z_pdf_add_page(apr_pool_t *mp, cairo_t *dst_cr, apr_array_header_t *page_ar
         // aggiungo una riga
         if (bord_y[count_bord_y])
           row_h = bord_y[count_bord_y];
-        z_pdf_add_row(pos, 0, prev_row_h, row_h);
+        mdt_pdf_add_row(pos, 0, prev_row_h, row_h);
         prev_row_h = row_h;
         count_bord_y ++;
       } else {
         // aggiungo una colonna
-        z_pdf_add_col_border(mp, dst_cr, pos, meta_ar);
+        mdt_pdf_add_col_border(mp, dst_cr, pos, meta_ar);
       }
     }
     cairo_show_page(dst_cr);
@@ -2838,12 +2837,12 @@ void z_pdf_add_page(apr_pool_t *mp, cairo_t *dst_cr, apr_array_header_t *page_ar
 }
 
 // Renderizza il documento PDF
-void z_pdf(apr_pool_t *mp, const char *src, const char *dst, double w, double h) {
+void mdt_pdf(apr_pool_t *mp, const char *src, const char *dst, double w, double h) {
   apr_array_header_t *src_ar, *page_ar;
   cairo_surface_t *cr_surf;
   cairo_t *cr;
   // Splitto il tracciato per riga
-  src_ar = z_split(mp, src, "\n");
+  src_ar = mdt_split(mp, src, "\n");
   if ((src_ar != NULL) && (src_ar->nelts > 0)) {
     // Creo una surface PDF
     cr_surf = cairo_pdf_surface_create(dst, w, h);
@@ -2859,10 +2858,10 @@ void z_pdf(apr_pool_t *mp, const char *src, const char *dst, double w, double h)
         // popolato allora questo è l'inizio di una nuova pagina.
         // Se l'array degli elementi di pagina fosse vuoto allora questa è
         // la prima pagina e in questo caso una riga vuota non è accettabile
-        if ((curr[0] == Z_T_EMPTY) && (page_ar->nelts > 0)) {
+        if ((curr[0] == MDT_T_EMPTY) && (page_ar->nelts > 0)) {
           // Aggiungo la pagina fin qui prodotta alla surface PDF
           // e reinizializzo l'array delle righe
-          z_pdf_add_page(mp, cr, page_ar, h);
+          mdt_pdf_add_page(mp, cr, page_ar, h);
           page_ar = apr_array_make(mp, 0, sizeof(const char*));
         } else {
           // Aggiungo la riga corrente all'array degli elementi di pagina
@@ -2903,10 +2902,10 @@ void z_pdf(apr_pool_t *mp, const char *src, const char *dst, double w, double h)
 //   rv = apr_pool_create(&mp, NULL);
 //   if (rv != APR_SUCCESS) exit(EXIT_FAILURE);
 
-//   sz = z_file_read(mp, "pdf_file.txt", &buffer, 0, &er);
+//   sz = mdt_file_read(mp, "pdf_file.txt", &buffer, 0, &er);
 
 //   if (sz > 0) {
-//     z_pdf(mp, buffer, "pdf_file.pdf", 504, 648);
+//     mdt_pdf(mp, buffer, "pdf_file.pdf", 504, 648);
 //   } else {
 //     printf("Error reading file.\n");
 //   }
@@ -2945,7 +2944,7 @@ void z_pdf(apr_pool_t *mp, const char *src, const char *dst, double w, double h)
 // t;480;1111;0.5;solid;000;111;8;000;sans ms;100;0;0|Lorem ipsum dolor sit amet, consur adipiscing elit. Mauris mollis imperdiet nisi, eget pulvinar orci sodales id. Pellentesque in ipsum quis augue suscipit laoreet. Vivamus mollis massa non felis tristique, eget rhoncus augue blandit. Maecenas finibus ligula vitae finibus consequat. Fusce ac tellus id mi lacinia sodales. Morbi neque mi, tristique nec magna id, tincidunt fringilla sem. Vivamus posuere mattis ligula nec aliquet. Quisque in felis nisl. Aliquam tempus tellus eget ligula auctor placerat. Aliquam sodales eget dui non accumsan. Mauris nisi nibh, ultrices ac erat maximus, scelerisque tincidunt lorem. Duis ipsum erat, tempor sed dapibus a, rutrum placerat urna. Ut venenatis ante ac augue gravida, vitae tincidunt mauris ultricies. Sed sit amet molestie ex, vitae malesuada mauris. Donec ac ullamcorper lacus. Aliquam in ipsum id velit laoreet sagittis a sit amet dolor.
 
 
-#endif /* _ZET_HAS_PDF */
+#endif /* _MDT_PDF */
 
 
 
@@ -2959,9 +2958,9 @@ void z_pdf(apr_pool_t *mp, const char *src, const char *dst, double w, double h)
 // #include "qrencode.h"
 // #include "zet.h"
 
-// module AP_MODULE_DECLARE_DATA z_qrcode_module;
+// module AP_MODULE_DECLARE_DATA mdt_qrcode_module;
 
-// const char* z_qr_map(apr_pool_t *m, QRcode *qr) {
+// const char* mdt_qr_map(apr_pool_t *m, QRcode *qr) {
 //   int width, len;
 //   char *bin, *p;
 //   unsigned char *data, value;
@@ -2988,47 +2987,47 @@ void z_pdf(apr_pool_t *mp, const char *src, const char *dst, double w, double h)
 //   return bin;
 // }
 
-// static int z_qrcode_request_handler(request_rec *r) {
+// static int mdt_qrcode_request_handler(request_rec *r) {
 //   QRcode *qr;
 //   const char *buf, *bin, q[] = "HELLO";
 //   if (strcmp(r->handler, "qr")) return DECLINED;
-//   Z_APACHE_INITIALIZE(r);
-//   Z_APACHE_AUTHORIZE(r, &z_qrcode_module);
+//   MDT_APACHE_INITIALIZE(r);
+//   MDT_APACHE_AUTHORIZE(r, &z_qrcode_module);
 //   qr = QRcode_encodeString(q, 0, QR_ECLEVEL_L, QR_MODE_8, 1);
-//   bin = z_qr_map(r->pool, qr);
+//   bin = mdt_qr_map(r->pool, qr);
 //   buf = apr_psprintf(r->pool, "{\"code\":\"%s\",\"width\":%d}", bin, qr->width);
-//   Z_APACHE_RESPONSE_JSON(r, 0, NULL, buf, Z_T_JSON);
+//   MDT_APACHE_RESPONSE_JSON(r, 0, NULL, buf, MDT_T_JSON);
 //   return OK;
 // }
 
-// static void z_qrcode_register_hooks(apr_pool_t *mp) {
+// static void mdt_qrcode_register_hooks(apr_pool_t *mp) {
 //   ap_hook_handler(z_qrcode_request_handler, NULL, NULL, APR_HOOK_LAST);
 // }
 
-// static void* z_qrcode_serv_config_make(apr_pool_t *m, server_rec *s) {
+// static void* mdt_qrcode_serv_config_make(apr_pool_t *m, server_rec *s) {
 //   return (void*)apr_table_make(m, 1);
 // }
 
-// static const char* z_qrcode_param_set(cmd_parms *p, void *c, const char *v) {
+// static const char* mdt_qrcode_param_set(cmd_parms *p, void *c, const char *v) {
 //   void *cfg = ap_get_module_config(p->server->module_config, &z_qrcode_module);
 //   apr_table_setn((apr_table_t*)cfg, p->cmd->name, v);
 //   return NULL;
 // }
 
-// static const command_rec z_qrcode_directives[] = {
-//   AP_INIT_TAKE1("ZAuthType", z_qrcode_param_set, NULL, OR_OPTIONS, ""),
-//   AP_INIT_TAKE1("ZAuthFile", z_qrcode_param_set, NULL, OR_OPTIONS, ""),
+// static const command_rec mdt_qrcode_directives[] = {
+//   AP_INIT_TAKE1("ZAuthType", mdt_qrcode_param_set, NULL, OR_OPTIONS, ""),
+//   AP_INIT_TAKE1("ZAuthFile", mdt_qrcode_param_set, NULL, OR_OPTIONS, ""),
 //   {NULL}
 // };
 
-// module AP_MODULE_DECLARE_DATA z_qrcode_module = {
+// module AP_MODULE_DECLARE_DATA mdt_qrcode_module = {
 //   STANDARD20_MODULE_STUFF,
 //   NULL,
 //   NULL,
-//   z_qrcode_serv_config_make,
+//   mdt_qrcode_serv_config_make,
 //   NULL,
-//   z_qrcode_directives,
-//   z_qrcode_register_hooks
+//   mdt_qrcode_directives,
+//   mdt_qrcode_register_hooks
 // };
 
 
