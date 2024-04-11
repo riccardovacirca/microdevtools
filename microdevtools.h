@@ -446,6 +446,21 @@ int ns_cmd_args_parse(ns_server_t *s, int argc, char *argv[], char **er_msg);
 int ns_server_init(apr_pool_t *mp, ns_server_t **s, int argc, char *argv[], char **er_msg);
 
 extern ns_dbd_pool_t *dbd_pool;
+
+
+
+#ifdef _ZET_HAS_PDF
+// debian: apt install libcairo-dev
+
+#include <math.h>
+#include <cairo/cairo.h>
+#include <cairo/cairo-pdf.h>
+#include <fontconfig/fontconfig.h>
+
+void z_pdf(apr_pool_t *m, const char *s, const char *d, double w, double h);
+
+#endif /* _ZET_HAS_PDF */
+
 #ifdef __cplusplus
 }
 #endif

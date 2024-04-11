@@ -2587,3 +2587,1212 @@ int ns_server_init(apr_pool_t *mp, ns_server_t **s, int argc, char *argv[], char
   }
   return st.result;
 }
+
+
+
+
+#ifdef _ZET_HAS_PDF
+
+#define PADDING_W 6
+#define PADDING_H 12
+
+void z_pdf_add_row(double *pos, double x, double y, double h) {
+  pos[0] = x ? pos[0] + x : 10.0;
+  pos[1] = y ? (pos[3] ? pos[1] + pos[3] + PADDING_H : pos[1] + y) : 30.0;
+  pos[2] = h ? h : 30.0;
+  if (pos[3]) pos[3] = 0;
+}
+
+cairo_surface_t *z_pdf_scale_image(cairo_surface_t *s, double w, double h) {
+  cairo_surface_t *res;
+  cairo_t *cr;
+  double ww, hh;
+  res = cairo_surface_create_similar(s, cairo_surface_get_content(s), w, h);
+  cr = cairo_create(res);
+  ww = cairo_image_surface_get_width(s);
+  hh = cairo_image_surface_get_height(s);
+  cairo_scale(cr, w/ww, h/hh);
+  cairo_set_source_surface(cr, s, 0, 0);
+  cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+  cairo_paint(cr);
+  cairo_destroy(cr);
+  return res;
+}
+
+void z_pdf_set_col_border(cairo_t *cr, double *pos, double w, double size, const char *color) {
+  cairo_set_line_width(cr, size);
+  cairo_set_line_join(cr, CAIRO_LINE_JOIN_MITER);
+  cairo_set_source_rgb(cr, z_ctoi(color[0]), z_ctoi(color[1]), z_ctoi(color[2]));
+  cairo_rectangle(cr, pos[0], pos[1], w, pos[2]);
+  cairo_stroke(cr);
+}
+
+void z_pdf_set_col_borders(cairo_t *cr, const char *border_pos, double *pos, double w) {
+  if (border_pos[0] == '1') {
+    cairo_move_to(cr, pos[0], pos[1]);
+    cairo_line_to(cr, pos[0] + w, pos[1]);
+  }
+  if (border_pos[1] == '1') {
+    cairo_move_to(cr, pos[0] + w, pos[1]);
+    cairo_line_to(cr, pos[0] + w, pos[1]+pos[2]);
+  }
+  if (border_pos[2] == '1') {
+    cairo_move_to(cr, pos[0], pos[1]+pos[2]);
+    cairo_line_to(cr, pos[0] + w, pos[1]+pos[2]);
+  }
+  if (border_pos[3] == '1') {
+    cairo_move_to(cr, pos[0], pos[1]);
+    cairo_line_to(cr, pos[0], pos[1]+pos[2]);
+  }
+  cairo_stroke(cr);
+}
+
+void z_pdf_col_fill_text(apr_pool_t*mp, cairo_t *cr, double *pos,
+                          const char *color, const char *font, float size,
+                          int wrap, const char *data, double *bord_y, int count) {
+  apr_array_header_t *text_ar;
+  char *text;
+  double y;
+  cairo_set_source_rgb(cr, z_ctoi(color[0]), z_ctoi(color[1]), z_ctoi(color[2]));
+  cairo_select_font_face(cr, font, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+  cairo_set_font_size(cr, size);
+  if (wrap) {
+    text = (char*)apr_palloc(mp, strlen(data));
+    for (int i = 0, count = 0; i < strlen(data); i++) {
+      if ((count >= wrap - 1) && (data[i] == ' ')) {
+        text[i] = '\r';
+        count = 0;
+      } else {
+        text[i] = data[i];
+        count ++;
+      }
+    }
+    text_ar = z_split(mp, text, "\r");
+  } else {
+    text_ar = z_split(mp, data, "\r");
+  }
+  if (text_ar->nelts <= 1) {
+    cairo_move_to(cr, pos[0] + PADDING_W, pos[1] + PADDING_H);
+    cairo_show_text(cr, data);
+  } else {
+    y = pos[1] + PADDING_H;
+    int pos_3 = 0;
+    for (int i = 0; i < text_ar->nelts; i++) {
+      cairo_move_to(cr, pos[0] + PADDING_W, y);
+      cairo_show_text(cr, APR_ARRAY_IDX(text_ar, i, const char*));
+      y += 10;
+      pos_3 += 10;
+    }
+    if (pos_3) {
+
+      pos[3] = pos_3;
+      bord_y[count-1] = pos[3] + PADDING_H;
+    }
+  }
+}
+
+void z_pdf_col_fill_image(cairo_t *cr, double *pos, const char *data, double w, double h) {
+  cairo_surface_t *image, *scaled;
+  image = cairo_image_surface_create_from_png(data);
+  scaled = z_pdf_scale_image(image, w, h);
+  cairo_set_source_surface(cr, scaled, pos[0], pos[1]);
+  cairo_paint(cr);
+  cairo_surface_destroy(image);
+  cairo_surface_destroy(scaled);
+}
+
+void z_pdf_add_col(apr_pool_t *mp, cairo_t *cr, double *pos, apr_array_header_t *meta, const char *data, double *bord_y, int count) {
+  const char *col_tp, *col_w, *bg_color, *font_sz, *font_cl, *font_name, *text_wrap, *img_w, *img_h;
+  int contains_text, contains_image;
+  col_tp = APR_ARRAY_IDX(meta, 0, const char*);
+  col_w = APR_ARRAY_IDX(meta, 1, const char*);
+  bg_color = APR_ARRAY_IDX(meta, 6, const char*);
+  font_sz = APR_ARRAY_IDX(meta, 7, const char*);
+  font_cl = APR_ARRAY_IDX(meta, 8, const char*);
+  font_name = APR_ARRAY_IDX(meta, 9, const char*);
+  text_wrap = APR_ARRAY_IDX(meta, 10, const char*);
+  img_w = APR_ARRAY_IDX(meta, 11, const char*);
+  img_h = APR_ARRAY_IDX(meta, 12, const char*);
+  contains_text = col_tp[0] == 't';
+  contains_image = col_tp[0] == 'i';
+  if (contains_text) {
+    z_pdf_col_fill_text(mp, cr, pos, font_cl, font_name,
+                         atof(font_sz), atoi(text_wrap), data, bord_y, count);
+  } else if (contains_image) {
+    z_pdf_col_fill_image(cr, pos, data, (double)atof(img_w), (double)atof(img_h));
+  }
+  pos[0] = pos[0] + atof(col_w);
+}
+
+void z_pdf_add_col_border(apr_pool_t *mp, cairo_t *cr, double *pos, apr_array_header_t *meta) {
+  const char *col_w, *border_pos, *border_sz, *border_tp, *border_cl;
+  int have_all_borders;
+  col_w = APR_ARRAY_IDX(meta, 1, const char*);
+  border_pos = APR_ARRAY_IDX(meta, 2, const char*);
+  border_sz = APR_ARRAY_IDX(meta, 3, const char*);
+  border_tp = APR_ARRAY_IDX(meta, 4, const char*);
+  border_cl = APR_ARRAY_IDX(meta, 5, const char*);
+  have_all_borders = strcmp(border_pos, "1111") == 0;
+  if (!have_all_borders) {
+    z_pdf_set_col_borders(cr, border_pos, pos, atof(col_w));
+  } else {
+    z_pdf_set_col_border(cr, pos, atof(col_w), atof(border_sz), border_cl);
+  }
+  pos[0] = pos[0] + atof(col_w);
+}
+
+/** @example  const char *buffer;
+              z_file_read(mp, "pdf_file.txt", &buffer);
+              z_pdf_create(mp, buffer, "pdf_file.pdf", 504, 648);
+
+    @note     Righe e colonne del PDF vengono create con una iterazione.
+              L'array pos conserva lo stato della posizione nel documento PDF
+              durante il posizionamento delle righe e delle colonne.
+              L'aggiunta di una riga non si traduce in alcuna azione effettiva
+              sul PDF, ma setta i valori nell'array pos per il successivo
+              posizionamento di tutte le colonne.
+              La posizione della riga precedente guida il posizionamento
+              di quella successiva mediante le variabili prev_row_h e row_h
+  */
+
+// Renderizza una pagina del documento PDF
+void z_pdf_add_page(apr_pool_t *mp, cairo_t *dst_cr, apr_array_header_t *page_ar, double h) {
+  double pos[5] = {0}, bord_y[16] = {0};
+  const char *page_entry, *meta, *data, *meta_type;
+  apr_array_header_t *page_entry_ar = NULL, *meta_ar;
+  // Queste variabili definiscono l'altezza delle righe corrente e precedente
+  float prev_row_h = 0, row_h;
+  // Inizializzo il contatore dei bordi
+  int count_bord_y = 0;
+  // Se l'array degli elementi di pagina è valido e non vuoto
+  if ((page_ar != NULL) && (page_ar->nelts > 0)) {
+    // Eseguo una iterazione
+    for (int i = 0; i < page_ar->nelts; i++) {
+      // Leggo il prossimo elemento
+      page_entry = APR_ARRAY_IDX(page_ar, i, const char*);
+      if (page_entry != NULL) {
+        // Splitto rispetto al carattere '|'
+        page_entry_ar = z_split(mp, page_entry, "|");
+        if (page_entry_ar != NULL) {
+          // L'elemento 0 contiene i metadati
+          meta = APR_ARRAY_IDX(page_entry_ar, 0, const char*);
+          // L'elemento 1 contiene i dati
+          data = APR_ARRAY_IDX(page_entry_ar, 1, const char*);
+          // Splitto i metadati rispetto al carattere ';'
+          meta_ar = z_split(mp, meta, ";");
+          // L'elemento 0 dei metadati definisce una riga (r) o una colonna
+          meta_type = APR_ARRAY_IDX(meta_ar, 0, const char*);
+          if (meta_type[0] == 'r') {
+            // L'elemento 1 dei metadati indica l'altezza di riga
+            row_h = atof(APR_ARRAY_IDX(meta_ar, 1, const char*));
+            // Aggiungo una riga alla pagina calcolandone le dimensioni
+            // in base a  quelle della riga corrente (per l'altezza) e della riga
+            // precedente (per il posizionamento)
+            z_pdf_add_row(pos, 0, prev_row_h, row_h);
+            // Registro l'altezza di riga per l'utilizzo
+            // nella renderizzazione della riga successiva
+            prev_row_h = row_h;
+            // Incremento il contatore dei bordi
+            count_bord_y++;
+          }
+          else {
+            // L'elemento corrente non è una riga, aggiungo una colonna
+            z_pdf_add_col(mp, dst_cr, pos, meta_ar, data, &bord_y[0], count_bord_y);
+          }
+        }
+      }
+    }
+
+    // Azzero il contatore dei bordi
+    // e la dimensione della riga precedente
+    count_bord_y = 0;
+    prev_row_h = 0;
+
+    for (int i = 0; i < page_ar->nelts; i++) {
+      // leggo la prossima riga
+      page_entry = APR_ARRAY_IDX(page_ar, i, const char*);
+      // Splitto rispetto al carattere '|'
+      page_entry_ar = z_split(mp, page_entry, "|");
+      // L'elemento 0 contiene i metadati
+      meta = APR_ARRAY_IDX(page_entry_ar, 0, const char*);
+      // splitto i metadati rispetto al carattere ';'
+      meta_ar = z_split(mp, meta, ";");
+      // l'elemento 0 dei metadati indica il riferimento a una riga
+      meta_type = APR_ARRAY_IDX(meta_ar, 0, const char*);
+      if (meta_type[0] == 'r') {
+        // l'elemento 1 dei metadati indica l'altezza di riga
+        row_h = atof(APR_ARRAY_IDX(meta_ar, 1, const char*));
+        // aggiungo una riga
+        if (bord_y[count_bord_y])
+          row_h = bord_y[count_bord_y];
+        z_pdf_add_row(pos, 0, prev_row_h, row_h);
+        prev_row_h = row_h;
+        count_bord_y ++;
+      } else {
+        // aggiungo una colonna
+        z_pdf_add_col_border(mp, dst_cr, pos, meta_ar);
+      }
+    }
+    cairo_show_page(dst_cr);
+  }
+}
+
+// Renderizza il documento PDF
+void z_pdf(apr_pool_t *mp, const char *src, const char *dst, double w, double h) {
+  apr_array_header_t *src_ar, *page_ar;
+  cairo_surface_t *cr_surf;
+  cairo_t *cr;
+  // Splitto il tracciato per riga
+  src_ar = z_split(mp, src, "\n");
+  if ((src_ar != NULL) && (src_ar->nelts > 0)) {
+    // Creo una surface PDF
+    cr_surf = cairo_pdf_surface_create(dst, w, h);
+    cr = cairo_create(cr_surf);
+    // Creo l'array della pagine del documento
+    page_ar = apr_array_make(mp, 0, sizeof(const char*));
+    if (page_ar != NULL) {
+      // Eseguo una iterazione sulle righe del tracciato
+      for (int i = 0; i < src_ar->nelts; i++) {
+        // Leggo la prossima riga
+        const char *curr = APR_ARRAY_IDX(src_ar, i, const char*);
+        // Se la riga è vuota e l'array degli elementi di pagina è già stato
+        // popolato allora questo è l'inizio di una nuova pagina.
+        // Se l'array degli elementi di pagina fosse vuoto allora questa è
+        // la prima pagina e in questo caso una riga vuota non è accettabile
+        if ((curr[0] == Z_T_EMPTY) && (page_ar->nelts > 0)) {
+          // Aggiungo la pagina fin qui prodotta alla surface PDF
+          // e reinizializzo l'array delle righe
+          z_pdf_add_page(mp, cr, page_ar, h);
+          page_ar = apr_array_make(mp, 0, sizeof(const char*));
+        } else {
+          // Aggiungo la riga corrente all'array degli elementi di pagina
+          APR_ARRAY_PUSH(page_ar, const char*) = apr_pstrdup(mp, curr);
+        }
+      }
+    }
+    cairo_destroy(cr);
+    cairo_surface_destroy(cr_surf);
+    cairo_debug_reset_static_data();
+    FcFini();
+  }
+}
+
+// EXAMPLE
+
+// #include <stdio.h>
+// #include <stdlib.h>
+// #include <apr.h>
+// #include <apr_pools.h>
+// #include <apr_strings.h>
+// #include <apr_tables.h>
+
+// #ifndef _ZET_HAS_PDF
+// #define _ZET_HAS_PDF
+// #endif
+
+// #include "zet.h"
+
+// int main() {
+//   int rv, sz;
+//   apr_pool_t *mp;
+//   void *buffer;
+//   char *er;
+
+//   rv = apr_initialize();
+//   if (rv != APR_SUCCESS) exit(EXIT_FAILURE);
+//   rv = apr_pool_create(&mp, NULL);
+//   if (rv != APR_SUCCESS) exit(EXIT_FAILURE);
+
+//   sz = z_file_read(mp, "pdf_file.txt", &buffer, 0, &er);
+
+//   if (sz > 0) {
+//     z_pdf(mp, buffer, "pdf_file.pdf", 504, 648);
+//   } else {
+//     printf("Error reading file.\n");
+//   }
+
+//   apr_pool_destroy(mp);
+//   apr_terminate();
+//   return 0;
+// }
+
+// r;40
+// t;440;1111;0.5;solid;000;111;8;000;times;0;0;0|Hola mundo
+// i;40;1111;0.5;solid;000;111;8;000;sans ms;0;40;40|Hello.png
+// r;40
+// t;140;1111;0.5;solid;000;111;8;000;sans ms;0;0;0|hello
+// t;240;1111;0.5;solid;000;111;8;000;sans ms;50;0;0|Lorem ipsum dolor sit amet, consur adipiscing elit. Mauris mollis imperdiet nisi, eget pulvinar orci sodales id. Pellentesque in ipsum quis augue suscipit laoreet.
+// t;100;1111;0.5;solid;000;111;8;000;sans ms;8;0;0|Lorem ipsum dolor sit amet, consur adipiscing elit. Mauris mollis imperdiet nisi, eget pulvinar orci sodales id. Pellentesque in ipsum quis augue suscipit laoreet.
+// r;40
+// t;120;1111;0.5;solid;000;111;8;000;sans ms;0;0;0|testo 4
+// t;240;1111;0.5;solid;000;111;8;000;sans ms;0;0;0|testo 5
+// t;120;1111;0.5;solid;000;111;8;000;sans ms;0;0;0|testo 6
+// r;100
+// t;480;1111;0.5;solid;000;111;8;000;sans ms;100;0;0|Lorem ipsum dolor sit amet, consur adipiscing elit. Mauris mollis imperdiet nisi, eget pulvinar orci sodales id. Pellentesque in ipsum quis augue suscipit laoreet. Vivamus mollis massa non felis tristique, eget rhoncus augue blandit. Maecenas finibus ligula vitae finibus consequat. Fusce ac tellus id mi lacinia sodales. Morbi neque mi, tristique nec magna id, tincidunt fringilla sem. Vivamus posuere mattis ligula nec aliquet. Quisque in felis nisl. Aliquam tempus tellus eget ligula auctor placerat. Aliquam sodales eget dui non accumsan. Mauris nisi nibh, ultrices ac erat maximus, scelerisque tincidunt lorem. Duis ipsum erat, tempor sed dapibus a, rutrum placerat urna. Ut venenatis ante ac augue gravida, vitae tincidunt mauris ultricies. Sed sit amet molestie ex, vitae malesuada mauris. Donec ac ullamcorper lacus. Aliquam in ipsum id velit laoreet sagittis a sit amet dolor.
+
+// r;40
+// t;440;1111;0.5;solid;000;111;8;000;times;0;0;0|Hola mundo
+// i;40;1111;0.5;solid;000;111;8;000;sans ms;0;40;40|Hello.png
+// r;40
+// t;140;1111;0.5;solid;000;111;8;000;sans ms;0;0;0|hello
+// t;240;1111;0.5;solid;000;111;8;000;sans ms;50;0;0|Lorem ipsum dolor sit amet, consur adipiscing elit. Mauris mollis imperdiet nisi, eget pulvinar orci sodales id. Pellentesque in ipsum quis augue suscipit laoreet.
+// t;100;1111;0.5;solid;000;111;8;000;sans ms;8;0;0|Lorem ipsum dolor sit amet, consur adipiscing elit. Mauris mollis imperdiet nisi, eget pulvinar orci sodales id. Pellentesque in ipsum quis augue suscipit laoreet.
+// r;40
+// t;120;1111;0.5;solid;000;111;8;000;sans ms;0;0;0|testo 4
+// t;240;1111;0.5;solid;000;111;8;000;sans ms;0;0;0|testo 5
+// t;120;1111;0.5;solid;000;111;8;000;sans ms;0;0;0|testo 6
+// r;100
+// t;480;1111;0.5;solid;000;111;8;000;sans ms;100;0;0|Lorem ipsum dolor sit amet, consur adipiscing elit. Mauris mollis imperdiet nisi, eget pulvinar orci sodales id. Pellentesque in ipsum quis augue suscipit laoreet. Vivamus mollis massa non felis tristique, eget rhoncus augue blandit. Maecenas finibus ligula vitae finibus consequat. Fusce ac tellus id mi lacinia sodales. Morbi neque mi, tristique nec magna id, tincidunt fringilla sem. Vivamus posuere mattis ligula nec aliquet. Quisque in felis nisl. Aliquam tempus tellus eget ligula auctor placerat. Aliquam sodales eget dui non accumsan. Mauris nisi nibh, ultrices ac erat maximus, scelerisque tincidunt lorem. Duis ipsum erat, tempor sed dapibus a, rutrum placerat urna. Ut venenatis ante ac augue gravida, vitae tincidunt mauris ultricies. Sed sit amet molestie ex, vitae malesuada mauris. Donec ac ullamcorper lacus. Aliquam in ipsum id velit laoreet sagittis a sit amet dolor.
+
+
+#endif /* _ZET_HAS_PDF */
+
+
+
+#ifdef QRCODE
+//EXTRA_LDFLAGS=-lqrencode
+
+
+// #include "httpd.h"
+// #include "http_config.h"
+// #include "http_protocol.h"
+// #include "qrencode.h"
+// #include "zet.h"
+
+// module AP_MODULE_DECLARE_DATA z_qrcode_module;
+
+// const char* z_qr_map(apr_pool_t *m, QRcode *qr) {
+//   int width, len;
+//   char *bin, *p;
+//   unsigned char *data, value;
+//   if (qr == NULL) {
+//     return NULL;
+//   }
+//   width = qr->width;
+//   data = qr->data;
+//   len = width * width;
+//   bin = (char*)apr_palloc(m, len + (width-1) + 1);
+//   if (bin == NULL) {
+//     return NULL;
+//   }
+//   memset(bin, 0, len + 1);
+//   p = bin;
+//   for (int i = 0; i < width; i++) {
+//     for (int j = 0; j < width; j++) {
+//       value = data[i * width + j];
+//       *p++ = (value & 1) ? '1' : '0';
+//     }
+//     if (i < (width-1))
+//       *p++ = '-';
+//   }
+//   return bin;
+// }
+
+// static int z_qrcode_request_handler(request_rec *r) {
+//   QRcode *qr;
+//   const char *buf, *bin, q[] = "HELLO";
+//   if (strcmp(r->handler, "qr")) return DECLINED;
+//   Z_APACHE_INITIALIZE(r);
+//   Z_APACHE_AUTHORIZE(r, &z_qrcode_module);
+//   qr = QRcode_encodeString(q, 0, QR_ECLEVEL_L, QR_MODE_8, 1);
+//   bin = z_qr_map(r->pool, qr);
+//   buf = apr_psprintf(r->pool, "{\"code\":\"%s\",\"width\":%d}", bin, qr->width);
+//   Z_APACHE_RESPONSE_JSON(r, 0, NULL, buf, Z_T_JSON);
+//   return OK;
+// }
+
+// static void z_qrcode_register_hooks(apr_pool_t *mp) {
+//   ap_hook_handler(z_qrcode_request_handler, NULL, NULL, APR_HOOK_LAST);
+// }
+
+// static void* z_qrcode_serv_config_make(apr_pool_t *m, server_rec *s) {
+//   return (void*)apr_table_make(m, 1);
+// }
+
+// static const char* z_qrcode_param_set(cmd_parms *p, void *c, const char *v) {
+//   void *cfg = ap_get_module_config(p->server->module_config, &z_qrcode_module);
+//   apr_table_setn((apr_table_t*)cfg, p->cmd->name, v);
+//   return NULL;
+// }
+
+// static const command_rec z_qrcode_directives[] = {
+//   AP_INIT_TAKE1("ZAuthType", z_qrcode_param_set, NULL, OR_OPTIONS, ""),
+//   AP_INIT_TAKE1("ZAuthFile", z_qrcode_param_set, NULL, OR_OPTIONS, ""),
+//   {NULL}
+// };
+
+// module AP_MODULE_DECLARE_DATA z_qrcode_module = {
+//   STANDARD20_MODULE_STUFF,
+//   NULL,
+//   NULL,
+//   z_qrcode_serv_config_make,
+//   NULL,
+//   z_qrcode_directives,
+//   z_qrcode_register_hooks
+// };
+
+
+
+
+
+
+
+
+
+// <!DOCTYPE html>
+// <html lang="en">
+// <head>
+//   <meta charset="UTF-8">
+//   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+//   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+//   <title>Document</title>
+// </head>
+// <body>
+//   <canvas id="myCanvas"></canvas>
+//   <script>
+//     // Definiamo una variabile per la base URL dell'API
+//     const endp = '/qr?s=hello';
+
+//     function qrcode(data) {
+//       // Otteniamo il riferimento al canvas HTML
+//       const canvas = document.getElementById("myCanvas");
+//       // Otteniamo il contesto di rendering 2D del canvas
+//       const ctx = canvas.getContext("2d");
+//       const squareSize = 10;
+//       // Impostiamo la dimensione del canvas
+//       canvas.width = data.width * squareSize;
+//       canvas.height = canvas.width;
+//       // Definiamo la stringa di caratteri
+//       // Definiamo la dimensione di ogni quadrato
+      
+//       let code = data.code.split('-');
+//       // Iteriamo sulla stringa di caratteri
+//       for (let j = 0; j < code.length; j++) {
+//         const y = j*squareSize;
+//         const str = code[j];
+//         for (let i = 0; i < str.length; i++) {
+//           // Calcoliamo le coordinate x e y del quadrato corrente
+//           const x = i * squareSize;
+          
+//           // Disegniamo il quadrato corrente
+//           if (str.charAt(i) === "1") {
+//             ctx.fillStyle = "black";
+//           } else {
+//             ctx.fillStyle = "white";
+//           }
+//           ctx.fillRect(x, y, squareSize, squareSize);
+//         }
+//       }
+//     }
+
+//     // Funzione per effettuare una richiesta Ajax
+//     function ajaxRequest(method, url, data) {
+//       return new Promise((resolve, reject) => {
+//         const xhr = new XMLHttpRequest();
+//         xhr.open(method, url);
+//         xhr.setRequestHeader('Content-Type', 'application/json');
+//         xhr.onload = function() {
+//           if (xhr.status === 200) {
+//             resolve(JSON.parse(xhr.responseText));
+//           } else {
+//             reject(xhr.statusText);
+//           }
+//         };
+//         xhr.onerror = function() {
+//           reject('Errore di connessione');
+//         };
+//         xhr.send(JSON.stringify(data));
+//       });
+//     }
+
+//     ajaxRequest('GET', `${endp}`)
+//       .then(data => {
+//         if (data.err == 0) {
+//           qrcode(data.obj);
+//         }
+//       })
+//       .catch(error => console.error(error));
+//   </script>
+// </body>
+// </html>
+
+#endif
+
+
+#ifdef BM25
+
+#include "service.h"
+
+//! ----------------------------------------------------------------------------
+//! Implementazione di OKAPI BM25
+//! ----------------------------------------------------------------------------
+//!
+//!                         f(qi, D) • (k1 + 1)
+//! ∑ IDF(qi) • -------------------------------------------
+//!             f(qi, D) + k1 • [ 1 - b + b • (|D|/avgdl) ]
+//!
+//! D        = Documento
+//! IDF(qi)  = Peso del termine i-esimo nella collezione di documenti
+//! f(qi, D) = Frequenza del termine i-esimo nel documento
+//! |D|      = Lunghezza del documento
+//! qi       = Termine i-esimo della query
+//! b, k1    = Parametri liberi b: 0.75, k1: 1.2
+//! avgdl    = Lunghezza media di un documento
+//! k1       = Permette di determinare la saturazione della frequenza
+//!            di un termine limitandone l'influenza sul il punteggio
+//!            di un dato documento
+//!
+//!          N - n[qi] + 0.5
+//! IDF = ln ---------------
+//!            n[qi] + 0.5
+//!
+//! N     = Numero totale dei documenti
+//! n[qi] = Numero dei documenti contenenti la query
+//!         computato mediante la funzione n_qi()
+
+//! ----------------------------------------------------------------------------
+
+//! \brief      Calcola il numero di documenti nella collezione
+//!             contenenti l'i-esimo termine della query di ricerca
+//! 
+//! \param  D   (array)     Array dei documenti della collezione
+//! \param  qi  (string)    I-esimo termine della query di ricerca
+//!
+int n_qi(apr_array_header_t *docs, const char *qi)
+{
+    const char *w;
+    apr_array_header_t *doc;
+    int count = 0;
+    for (int i = 0; i < docs->nelts; i ++) {
+        doc = APR_ARRAY_IDX(docs, i, apr_array_header_t*);
+        for (int j = 0; j < doc->nelts; j++) {
+            w = APR_ARRAY_IDX(docs, j, const char*);
+            if (strcmp(w, qi)) continue;
+            count ++;
+            break;
+        }
+    }
+    return count;
+}
+
+//! \brief      Inverse Document Frequency
+//!             Calcola il peso del termine i-esimo nel documento
+//!
+//! \param  D   (array)     Array dei documenti 
+//! \param  qi  (string)    Termine i-esimo
+//!
+double IDF_qi(apr_array_header_t *D, const char *qi)
+{
+    int N = D->nelts;
+    int nqi = n_qi(D, qi);
+    return log(((((double)N - (double)nqi + 0.5)/((double)nqi + 0.5)) + 1));
+}
+
+//! \brief      Frequenza del termine qi nel documento d
+//!
+//! \param  d   (array)     Documento 
+//! \param  qi  (string)    Termine i-esimo
+//!
+double f_qi_d(apr_array_header_t *d, const char *qi)
+{
+    int count = 0;
+    const char *w;
+    for (int i = 0; i < d->nelts; i++) {
+        w = APR_ARRAY_IDX(d, i, const char*);
+        if (strncasecmp(w, qi, (int)strlen(qi)) == 0) count ++;
+    }
+    return ((double)count/(double)d->nelts);
+}
+
+//! \brief      Lunghezza media di un documento della collezione
+//!
+//! \param  D   (array)     Collezione dei documenti
+//!
+double avg_dl(apr_array_header_t *D)
+{
+    int Dlen;
+    apr_array_header_t *d;
+    Dlen = 0;
+    for (int i = 0; i < D->nelts; i++) {
+        d = APR_ARRAY_IDX(D, i, apr_array_header_t*);
+        Dlen += d->nelts;
+    }
+    return ((double)Dlen/(double)D->nelts);
+}
+
+//! \brief      Associa ad ogni documento della collezione un punteggio
+//!             relativo alla sua pertinenza rispetto alla query
+//!
+//! \param  mp  (apr_pool_t)  Pool di memoria
+//! \param  D   (array)       Collezione dei documenti
+//! \param  Q   (array)       Query di ricerca
+//! \param  b   (float)       (0.75)
+//! \param  k1  (float)       ([1.2 - 2])
+//!
+apr_array_header_t* bm25(apr_pool_t *mp, apr_array_header_t *D,
+                         apr_array_header_t *Q, float b, float k1)
+{
+    double avgdl, fqid, idfqi, score;
+    const char *qi;
+    apr_array_header_t *d;
+    apr_array_header_t *scores;
+    // Calcolo la lunghezza media di un documneto della collezione
+    avgdl = avg_dl(D);
+    scores = apr_array_make(mp, D->nelts, sizeof(double));
+    // Ripeto per ogni documento
+    for (int i = 0; i < D->nelts; i++) {
+        d = APR_ARRAY_IDX(D, i, apr_array_header_t*);
+        score = 0;
+       // Ripeto per ogni termine nella query
+        for (int j = 0; j < Q->nelts; j++) {
+            // Estraggo il prossimo termine
+            qi = APR_ARRAY_IDX(Q, j, const char*);
+            idfqi = IDF_qi(D, qi); // IDF del termine
+            fqid = f_qi_d(d, qi);  // Frequenza del termine
+            // Calcolo lo score
+            score += idfqi * (
+                (fqid * (k1 + 1)) /
+                (fqid + k1 * (1 - b + b * ((double)d->nelts / avgdl)))
+            );
+        }
+        APR_ARRAY_PUSH(scores, double) = score;
+    }
+    return scores;
+}
+
+const char *docs[3] = {
+  "hello world", "hola mundo", "ciao a tutti"
+};
+
+int mt_service_run(mt_t *mt)
+{
+  apr_status_t rv;
+  apr_array_header_t *query, *documents, *doc, *scores, *tmp_ar;
+  const char *q;
+  void *buffer;
+  const char msg[] = "No score!";
+  mt_response_content_type_set(mt, "text/plain;charset=utf8");
+  dbg_("%s\n", mt->request->query);
+  if (mt->request->args != NULL) {
+    dbg_("TEST1\n");
+    q = apr_table_get(mt->request->args, "q");
+    if (q != NULL) {
+    dbg_("TEST2\n");
+      query = mt_split(mt->pool, q, " ");
+      if (query) {
+        documents = apr_array_make(mt->pool, 3, sizeof(apr_array_header_t*));
+        for (int i = 0; i < 3; i++) {
+          doc = mt_split(mt->pool, docs[i], " ");
+          if (doc) {
+            APR_ARRAY_PUSH(documents, apr_array_header_t*) = doc;
+          }
+        }
+        scores = bm25(mt->pool, documents, query, 0.75, 1.2);
+        if (scores != NULL && scores->nelts > 0) {
+          tmp_ar = apr_array_make(mt->pool, scores->nelts, sizeof(const char*));
+          for (int i = 0; i < documents->nelts; i++) {
+            double s = APR_ARRAY_IDX(scores, i, double);
+            APR_ARRAY_PUSH(tmp_ar, const char*) = apr_psprintf(mt->pool, "Score: %lf in '%s'", s, docs[i]);
+          }
+          buffer = (void*)apr_psprintf(mt->pool, "Query: %s,\n%s\n", q, mt_join(mt->pool, tmp_ar, "\n"));
+          mt_response_buffer_set(mt, buffer, strlen(buffer));
+          return 200;
+        }
+      }
+    }
+  }
+  mt_response_buffer_set(mt, (void*)msg, strlen(msg));
+  return 200;
+}
+
+int main(int argc, char **argv)
+{
+  if (argc < 2) mt_usage(argv[0]);
+  mt_config_t *cnf;
+  mt_config_init(cnf, ENV_NS);
+  mt_daemonize();
+  mt_serve(argv[1], cnf, 1000);
+  mt_config_free(cnf);
+  return 0;
+}
+
+
+#endif
+
+
+
+#ifdef schema
+// =============================================================================
+// schema
+// =============================================================================
+
+#ifdef schema
+
+
+#include "apr.h"
+#include "apr_pools.h"
+#include "apr_tables.h"
+#include "apr_strings.h"
+#include "apr_escape.h"
+#include "hlp_dbd.h"
+#include "hlp_schema.h"
+
+#define HLP_DBD_SCHEMA_MYSQL 0x01
+#define HLP_DBD_SCHEMA_PGSQL 0x02
+#define HLP_DBD_SCHEMA_SQLITE3 0x03
+#define HLP_DBD_SCHEMA_MSSQL 0x04
+
+typedef apr_array_header_t*(*hlp_schema_tab_fn_t) (apr_pool_t *mp, hlp_dbd_t *dbd, const char *tab);
+typedef apr_array_header_t*(*hlp_schema_col_fn_t) (apr_pool_t *mp, hlp_dbd_t *dbd, const char *tab, const char *col);
+typedef const char*(*hlp_schema_inf_fn_t) (apr_pool_t *mp, hlp_dbd_t *dbd);
+
+typedef struct hlp_schema_t {
+  int err;
+  const char *log;
+  const char *tab;
+  int dbd_server_type;
+  apr_array_header_t *att;
+  hlp_schema_tab_fn_t tb_name_fn;
+  hlp_schema_tab_fn_t cl_attr_fn;
+  hlp_schema_tab_fn_t pk_attr_fn;
+  hlp_schema_tab_fn_t fk_tabs_fn;
+  hlp_schema_tab_fn_t fk_attr_fn;
+  hlp_schema_tab_fn_t un_attr_fn;
+  hlp_schema_col_fn_t cl_name_fn;
+  hlp_schema_col_fn_t id_last_fn;
+  hlp_schema_inf_fn_t db_vers_fn;
+  apr_array_header_t *pk_attrs;
+  apr_array_header_t *unsigned_attrs;
+  apr_array_header_t *refs_attrs;
+} hlp_schema_t;
+
+apr_array_header_t* hlp_mysql_tb_name(apr_pool_t *mp, hlp_dbd_t *dbd, const char *tb) {
+  const char *pt =
+  "SELECT table_name "
+  "FROM INFORMATION_SCHEMA.tables WHERE table_name='%s'";
+  const char *sql = apr_psprintf(mp, pt, tb);
+  return hlp_dbd_select(mp, dbd, sql);
+}
+
+apr_array_header_t* hlp_mysql_cl_name(apr_pool_t *mp, hlp_dbd_t *dbd, const char *tb, const char *cl) {
+  const char *pt =
+  "SELECT column_name FROM INFORMATION_SCHEMA.columns "
+  "WHERE table_name='%s' AND column_name='%s'";
+  const char *sql = apr_psprintf(mp, pt, tb, cl);
+  return hlp_dbd_select(mp, dbd, sql);
+}
+
+apr_array_header_t* hlp_mysql_cl_attr(apr_pool_t *mp, hlp_dbd_t *dbd, const char *tb) {
+  const char *pt =
+  "SELECT ordinal_position as ordinal_position,"
+  "table_name as table_name,"
+  "column_name as column_name,"
+  "(case when column_default is null then 'null' else column_default end) as column_default, "
+  "data_type as data_type,"
+  "(case when character_set_name is null then 'null' else character_set_name end) as character_set_name, "
+  "column_type as column_type,"
+  "(case when column_key is null then 'null' else column_key end) as column_key,"
+  "(case when (column_comment is null or COLUMN_COMMENT like '') then 'null' else COLUMN_COMMENT end) as column_comment,"
+  "(column_type LIKE '%%unsigned%%') as is_unsigned,"
+  "0 as is_primary_key,"
+  "0 as is_foreign_key,"
+  "(extra LIKE 'auto_increment') as is_auto_increment,"
+  "(is_nullable LIKE 'YES') as is_nullable,"
+  "(!isnull(numeric_precision)) as is_numeric,"
+  "(isnull(numeric_precision)) as is_string,"
+  "(data_type LIKE 'date') as is_date,"
+  "(column_type LIKE 'tinyint(1) unsigned') as is_boolean,"
+  "'null' as column_options,"
+  "'null' as referenced_schema,"
+  "'null' as referenced_table,"
+  "'null' as referenced_column,"
+  "0 as is_referenced_pk_multi,"
+  "'null' as referenced_pk "
+  "FROM INFORMATION_SCHEMA.columns WHERE table_name='%s' "
+  "ORDER BY ordinal_position ASC";
+  const char *sql = apr_psprintf(mp, pt, tb);
+  apr_array_header_t*ret =  hlp_dbd_select(mp, dbd, sql);
+  return ret;
+}
+
+apr_array_header_t* hlp_mysql_pk_attr(apr_pool_t *mp, hlp_dbd_t *dbd, const char *tb) {
+  const char *pt =
+  "SELECT c.column_name FROM "
+  "INFORMATION_SCHEMA.columns AS c JOIN INFORMATION_SCHEMA.statistics AS s "
+  "ON s.column_name=c.column_name AND s.table_schema=c.table_schema AND "
+  "s.table_name=c.table_name WHERE !isnull(s.index_name) AND "
+  "s.index_name LIKE 'PRIMARY' AND c.table_name='%s'";
+  const char *sql = apr_psprintf(mp, pt, tb);
+  return hlp_dbd_select(mp, dbd, sql);
+}
+
+apr_array_header_t* hlp_mysql_un_attr(apr_pool_t *mp, hlp_dbd_t *dbd, const char *tb) {
+  return NULL;
+}
+
+apr_array_header_t* hlp_mysql_fk_tabs(apr_pool_t *mp, hlp_dbd_t *dbd, const char *tb) {
+  const char *pt = 
+  "SELECT table_name FROM INFORMATION_SCHEMA.key_column_usage "
+  "WHERE referenced_table_name='%s'";
+  const char *sql = apr_psprintf(mp, pt, tb);
+  return hlp_dbd_select(mp, dbd, sql);
+}
+
+apr_array_header_t* hlp_mysql_fk_attr(apr_pool_t *mp, hlp_dbd_t *dbd, const char *tb) {
+  const char *pt =
+  "SELECT column_name,referenced_table_schema referenced_schema,"
+  "referenced_table_name referenced_table,"
+  "referenced_column_name referenced_column "
+  "FROM INFORMATION_SCHEMA.key_column_usage "
+  "WHERE referenced_column_name IS NOT NULL AND table_name='%s'";
+  const char *sql = apr_psprintf(mp, pt, tb);
+  return hlp_dbd_select(mp, dbd, sql);
+}
+
+apr_array_header_t* hlp_mysql_id_last(apr_pool_t *mp, hlp_dbd_t *dbd, const char *tb, const char *pk) {
+  const char *sql = apr_pstrdup(mp, "SELECT last_insert_id() as last_id");
+  return hlp_dbd_select(mp, dbd, sql);
+}
+
+const char* hlp_mysql_version(apr_pool_t *mp, hlp_dbd_t *dbd) {
+  apr_array_header_t *res = hlp_dbd_select(mp, dbd, "SELECT version() version");
+  if (res != NULL) {
+    apr_table_t *t = APR_ARRAY_IDX(res, 0, apr_table_t*);
+    if (t != NULL) return apr_table_get(t, "version");
+  }
+  return NULL;
+}
+
+apr_array_header_t* hlp_sqlite3_tb_name(apr_pool_t *mp, hlp_dbd_t *d, const char *tb) {
+  const char *sql = apr_psprintf(mp, "PRAGMA table_info(%s)", tb);
+  apr_array_header_t *res = hlp_dbd_select(mp, d, sql);
+  if (res == NULL) return NULL;
+  apr_table_t *tab = APR_ARRAY_IDX(res, 0, apr_table_t*);
+  apr_table_set(tab, "table_name", tb);
+  return res;
+}
+
+apr_array_header_t* hlp_sqlite3_cl_name(apr_pool_t *mp, hlp_dbd_t *d, const char *tb, const char *cl) {
+  const char *sql, *col;
+  apr_array_header_t *res;
+  apr_table_t *tab;
+  sql = apr_psprintf(mp, "PRAGMA table_info(%s)", tb);
+  if (sql == NULL) return NULL;
+  res = hlp_dbd_select(mp, d, sql);
+  if (res == NULL || res->nelts <= 0) return NULL;
+  for (int i = 0; i < res->nelts; i++) {
+    tab = APR_ARRAY_IDX(res, i, apr_table_t*);
+    col = apr_table_get(tab, "name");
+    if (col == NULL) continue;
+    if (strcmp(col, cl) == 0) return res;
+  }
+  return NULL;
+}
+
+apr_array_header_t* hlp_sqlite3_cl_attr(apr_pool_t *mp, hlp_dbd_t *d, const char *tb) {
+  const char *pt =
+  "SELECT t.cid+1 ordinal_position,'%s' table_name,t.name column_name,"
+  "t.dflt_value column_default,t.type data_type,e.encoding character_set_name,"
+  "t.type column_type,null column_key,null column_comment,0 is_unsigned,"
+  "t.pk is_primary_key,0 is_foreign_key,"
+  "CASE WHEN ((SELECT 1 FROM sqlite_master AS m WHERE "
+  "m.'name'='%s' AND lower(sql) LIKE '%%autoincrement%%')=1) AND (t.'pk'=1) "
+  "THEN '1' ELSE '0' END is_auto_increment,"
+  "CASE WHEN t.'notnull'='0' THEN '0' ELSE '1' END is_nullable,"
+  "CASE WHEN lower(t.'type')='integer' OR lower(t.'type')='numeric' OR "
+  "lower(t.'type')='real' THEN '1' ELSE '0' END is_numeric,"
+  "CASE WHEN lower(t.'type')='text' THEN '1' ELSE '0' END is_string,"
+  "0 as is_date,0 as is_boolean,null column_options,null referenced_schema,"
+  "null referenced_table,null referenced_column,0 is_referenced_pk_multi,"
+  "null referenced_pk FROM "
+  "pragma_table_info('%s') AS t,pragma_encoding AS e,"
+  "sqlite_master AS m WHERE m.name='%s'";
+  const char *sql = apr_psprintf(mp, pt, tb, tb, tb, tb);
+  if (sql == NULL) return NULL;
+  return hlp_dbd_select(mp, d, sql);
+}
+
+apr_array_header_t* hlp_sqlite3_pk_attr(apr_pool_t *mp, hlp_dbd_t *d, const char *tb) {
+  const char *sql, *attrib; //, *encoding = NULL;
+  apr_array_header_t *res, *retv;
+  apr_table_t *tab;
+  sql = apr_psprintf(mp, "PRAGMA table_info(%s)", tb);
+  if (sql == NULL) return NULL;
+  res = hlp_dbd_select(mp, d, sql);
+  if (res == NULL || res->nelts <= 0) return NULL;
+  retv = apr_array_make(mp, 1, sizeof(apr_table_t*));
+  if (retv == NULL) return NULL;
+  for (int i = 0; i < res->nelts; i++) {
+    tab = APR_ARRAY_IDX(res, i, apr_table_t*);
+    if ((attrib = apr_table_get(tab, "pk")) == NULL) continue;
+    if (atoi(attrib)) {
+      if ((attrib = apr_table_get(tab, "name")) == NULL) continue;
+      apr_table_set(tab, "column_name", attrib);
+      apr_table_unset(tab, "cid");
+      apr_table_unset(tab, "name");
+      apr_table_unset(tab, "type");
+      apr_table_unset(tab, "notnull");
+      apr_table_unset(tab, "dflt_value");
+      apr_table_unset(tab, "pk");
+      APR_ARRAY_PUSH(retv, apr_table_t*) = tab;
+    }
+  }
+  return retv;
+}
+
+apr_array_header_t* hlp_sqlite3_un_attr(apr_pool_t *mp, hlp_dbd_t *d, const char *tb) {
+  return NULL;
+}
+
+apr_array_header_t* hlp_sqlite3_fk_tabs(apr_pool_t *mp, hlp_dbd_t *d, const char *tb) {
+  const char *pt =
+  "SELECT m.name table_name FROM sqlite_master m "
+  "JOIN pragma_foreign_key_list(m.name) p ON m.name!=p.'table' "
+  "AND p.'table'='%s' WHERE m.type='table' ORDER BY m.name";
+  const char *sql = apr_psprintf(mp, pt, tb);
+  return hlp_dbd_select(mp, d, sql);
+}
+
+apr_array_header_t* hlp_sqlite3_fk_attr(apr_pool_t *mp, hlp_dbd_t *d, const char *tb) {
+  const char *sql, *attrib;
+  apr_array_header_t *res;
+  apr_table_t *tab;
+  sql = apr_psprintf(mp, "PRAGMA foreign_key_list(%s)", tb);
+  res = sql != NULL ? hlp_dbd_select(mp, d, sql) : NULL;
+  if (res == NULL || res->nelts <= 0) return NULL;
+  for (int i = 0; i < res->nelts; i++) {
+    tab = APR_ARRAY_IDX(res, i, apr_table_t*);
+    if (tab == NULL || (apr_table_elts(tab))->nelts <= 0) continue;
+    if((attrib = apr_table_get(tab, "from")) == NULL) continue;
+    apr_table_set(tab, "column_name", attrib);
+    apr_table_set(tab, "is_foreign_key", "1");
+    apr_table_set(tab, "referenced_schema", "null");
+    if ((attrib = apr_table_get(tab, "table")) == NULL) continue;
+    apr_table_set(tab, "referenced_table", attrib);
+    if ((attrib = apr_table_get(tab, "to")) == NULL) continue;
+    apr_table_set(tab, "referenced_column", attrib);
+    apr_table_unset(tab, "id");
+    apr_table_unset(tab, "seq");
+    apr_table_unset(tab, "table");
+    apr_table_unset(tab, "from");
+    apr_table_unset(tab, "to");
+    apr_table_unset(tab, "table");
+    apr_table_unset(tab, "on_update");
+    apr_table_unset(tab, "on_delete");
+    apr_table_unset(tab, "match");
+  }
+  return res;
+}
+
+apr_array_header_t* hlp_sqlite3_id_last(apr_pool_t *mp, hlp_dbd_t *d, const char *tb, const char *pk) {
+  const char *sql = apr_pstrdup(mp, "SELECT last_insert_rowid()");
+  return hlp_dbd_select(mp, d, sql);
+}
+
+const char* hlp_sqlite3_version(apr_pool_t *mp, hlp_dbd_t *d) {
+  const char *sql = apr_pstrdup(mp, "SELECT sqlite_version() as version");
+  apr_array_header_t *res = hlp_dbd_select(mp, d, sql);
+  if (res != NULL && res->nelts > 0) {
+    apr_table_t *t = APR_ARRAY_IDX(res, 0, apr_table_t*);
+    if (t != NULL) return apr_table_get(t, "version");
+  }
+  return NULL;
+}
+
+apr_array_header_t* hlp_schema_attr_get(hlp_schema_t *schema) {
+  return schema->att;
+}
+
+const char* hlp_schema_table_get(hlp_schema_t *schema) {
+  return schema->tab;
+}
+
+apr_array_header_t* hlp_schema_get_col_attrs(apr_pool_t *mp, hlp_dbd_t *dbd, hlp_schema_t *schema, const char *tab) {
+  apr_array_header_t*ret =schema->cl_attr_fn(mp, dbd, tab);
+  return ret;
+}
+
+apr_array_header_t* hlp_schema_get_pk_attrs(apr_pool_t *mp, hlp_dbd_t *dbd, hlp_schema_t *schema, const char *tab)
+{
+  return schema->pk_attr_fn(mp, dbd, tab);
+}
+
+apr_array_header_t* hlp_schema_get_unsig_attrs(apr_pool_t *mp, hlp_dbd_t *dbd, hlp_schema_t *schema, const char *tab)
+{
+  return schema->dbd_server_type ==  HLP_DBD_SCHEMA_MYSQL
+    ? NULL 
+    : schema->un_attr_fn(mp, dbd, tab);
+}
+
+apr_array_header_t* hlp_schema_get_refs_attrs(apr_pool_t *mp, hlp_dbd_t *dbd,
+                                                 hlp_schema_t *schema,
+                                                 const char *tab)
+{
+  return schema->fk_attr_fn(mp, dbd, tab);
+}
+
+int hlp_schema_update_attrs(apr_pool_t *mp, hlp_dbd_t *dbd,
+                               hlp_schema_t *schema)
+{
+  const char *c_name, *c_pk_name, *c_uns_name, *c_rf_name;
+  for (int i = 0; i < schema->att->nelts; i++) {
+    c_name = hlp_dbd_field_value(schema->att, i, "column_name");
+    if (c_name == NULL) continue;
+    /// Updates primary key attributes
+    if (schema->pk_attrs != NULL && schema->pk_attrs->nelts > 0) {
+      for (int j = 0; j < schema->pk_attrs->nelts; j ++) {
+        c_pk_name = hlp_dbd_field_value(schema->pk_attrs, j, "column_name");
+        if (c_pk_name == NULL) continue;
+        if (strcmp(c_name, c_pk_name) != 0) continue;
+        hlp_dbd_field_set(schema->att, i, "is_primary_key", "1");
+      }
+    }
+    /// Updates unsigned attributes
+    if (schema->unsigned_attrs != NULL && schema->unsigned_attrs->nelts > 0) {
+      for (int j = 0; j < schema->unsigned_attrs->nelts; j ++) {
+        c_uns_name = hlp_dbd_field_value(schema->unsigned_attrs, j, "column_name");
+        if (c_uns_name == NULL) continue;
+        if (strcmp(c_name, c_uns_name) != 0) continue;
+        hlp_dbd_field_set(schema->att, i, "is_unsigned", "1");
+      }
+    }
+    /// Updates foreign key attributes
+    if (schema->refs_attrs != NULL && schema->refs_attrs->nelts > 0) {
+      for (int j = 0; j < schema->refs_attrs->nelts; j ++) {
+        c_rf_name = hlp_dbd_field_value(schema->refs_attrs, j, "column_name");
+        if (c_rf_name == NULL) continue;
+        if (strcmp(c_name, c_rf_name) != 0) continue;
+        hlp_dbd_field_set(schema->att, i, "is_foreign_key", "1");
+        hlp_dbd_field_set(schema->att, i, "referenced_schema",
+                         hlp_dbd_field_value(schema->refs_attrs,
+                         j, "referenced_schema"));
+        hlp_dbd_field_set(schema->att, i, "referenced_table",
+                         hlp_dbd_field_value(schema->refs_attrs,
+                         j, "referenced_table"));
+        hlp_dbd_field_set(schema->att, i, "referenced_column",
+                         hlp_dbd_field_value(schema->refs_attrs,
+                         j, "referenced_column"));
+        const char *rt = hlp_dbd_field_value(schema->refs_attrs,
+                                            j, "referenced_table");
+        apr_array_header_t *rk = hlp_schema_get_pk_attrs(mp, dbd, schema, rt);
+        if (rk == NULL || rk->nelts <= 0) continue;
+        if (rk->nelts <= 1) {
+          hlp_dbd_field_set(schema->att, i, "referenced_pk",
+                           hlp_dbd_field_value(rk, 0, "column_name"));
+          continue;
+        }
+        apr_array_header_t *rk_names =
+          apr_array_make(mp, rk->nelts, sizeof(const char*));
+        for (int k = 0; k < rk->nelts; k ++)
+          APR_ARRAY_PUSH(rk_names, const char*) =
+            hlp_dbd_field_value(rk, k, "column_name");
+        hlp_dbd_field_set(schema->att, i, "referenced_pk",
+                         apr_array_pstrcat(mp, rk_names, ','));
+        hlp_dbd_field_set(schema->att, i, "is_referenced_pk_multi", "1");
+      }
+    }
+  }
+  return 0;
+}
+
+//hlp_schema_t* hlp_dbd_schema(apr_pool_t *mp, hlp_dbd_t *dbd, const char *tab) {
+apr_array_header_t* hlp_dbd_schema(apr_pool_t *mp, hlp_dbd_t *dbd, const char *tab) {
+  const char *dbd_driver_name;
+  hlp_schema_t *schema = (hlp_schema_t*)apr_palloc(mp, sizeof(hlp_schema_t));
+  if (schema == NULL) {
+    return NULL;
+  }
+  schema->err = 0;
+  schema->log = NULL;
+  schema->dbd_server_type = 0;
+  schema->att = NULL;
+  schema->tb_name_fn = NULL;
+  schema->cl_name_fn = NULL;
+  schema->cl_attr_fn = NULL;
+  schema->pk_attr_fn = NULL;
+  schema->fk_tabs_fn = NULL;
+  schema->fk_attr_fn = NULL;
+  schema->un_attr_fn = NULL;
+  schema->id_last_fn = NULL;
+  schema->db_vers_fn = NULL;
+  schema->pk_attrs = NULL;
+  schema->unsigned_attrs = NULL;
+  schema->refs_attrs = NULL;
+  schema->tab = apr_pstrdup(mp, tab);
+  dbd_driver_name = hlp_dbd_driver_name(dbd);
+  if (dbd_driver_name == NULL) {
+    return NULL;
+  }
+  if (strcmp(dbd_driver_name, "mysql") == 0) {
+    schema->tb_name_fn = hlp_mysql_tb_name;
+    schema->cl_name_fn = hlp_mysql_cl_name;
+    schema->cl_attr_fn = hlp_mysql_cl_attr;
+    schema->pk_attr_fn = hlp_mysql_pk_attr;
+    schema->un_attr_fn = hlp_mysql_un_attr;
+    schema->fk_tabs_fn = hlp_mysql_fk_tabs;
+    schema->fk_attr_fn = hlp_mysql_fk_attr;
+    schema->id_last_fn = hlp_mysql_id_last;
+    schema->db_vers_fn = hlp_mysql_version;
+  } else if (strcmp(dbd_driver_name, "sqlite3") == 0) {
+    schema->tb_name_fn = hlp_sqlite3_tb_name;
+    schema->cl_name_fn = hlp_sqlite3_cl_name;
+    schema->cl_attr_fn = hlp_sqlite3_cl_attr;
+    schema->pk_attr_fn = hlp_sqlite3_pk_attr;
+    schema->un_attr_fn = hlp_sqlite3_un_attr;
+    schema->fk_tabs_fn = hlp_sqlite3_fk_tabs;
+    schema->fk_attr_fn = hlp_sqlite3_fk_attr;
+    schema->id_last_fn = hlp_sqlite3_id_last;
+    schema->db_vers_fn = hlp_sqlite3_version;
+  } else {
+    return NULL;
+  }
+  // #elif defined(WITH_PGSQL)
+  // if (strcmp(dbd_driver_name, "pgsql") == 0) {
+  //   schema->tb_name_fn = hlp_pgsql_tb_name;
+  //   schema->cl_name_fn = hlp_pgsql_cl_name;
+  //   schema->cl_attr_fn = hlp_pgsql_cl_attr;
+  //   schema->pk_attr_fn = hlp_pgsql_pk_attr;
+  //   schema->un_attr_fn = hlp_pgsql_un_attr;
+  //   schema->fk_tabs_fn = hlp_pgsql_fk_tabs;
+  //   schema->fk_attr_fn = hlp_pgsql_fk_attr;
+  //   schema->id_last_fn = hlp_pgsql_id_last;
+  //   schema->db_vers_fn = hlp_pgsql_version;
+  // } else {
+  //   return NULL;
+  // }
+  // #else
+  // return NULL;
+  // #endif
+  // Estrae gli attributi di colonna
+  // per la tabella di riferimento o restituisce un errore
+  schema->att = hlp_schema_get_col_attrs(mp, dbd, schema, tab);
+  if (schema->att == NULL) {
+    return NULL;
+  }
+  // Estrae gli attributi delle chiavi primarie
+  // per la tabella di riferimento o restituisce un errore
+  schema->pk_attrs = hlp_schema_get_pk_attrs(mp, dbd, schema, tab);
+  if (schema->err) {
+    return NULL;
+  }
+  // Estrae gli attributi delle colonne unsigned
+  // per la tabella di riferimento o restituisce un errore
+  schema->unsigned_attrs = hlp_schema_get_unsig_attrs(mp, dbd, schema, tab);
+  if (schema->err) {
+    return NULL;
+  }
+  // Estrae gli attributi delle chiavi esterne
+  // per la tabella di riferimento o restituisce un errore
+  schema->refs_attrs = hlp_schema_get_refs_attrs(mp, dbd, schema, tab);
+  if (schema->err) {
+    return NULL;
+  }
+  // Sovrascrive gli attributi di colonna
+  // con i valori di chiave primaria, unsigned e chiave esterna
+  hlp_schema_update_attrs(mp, dbd, schema);
+  return schema->att;
+}
+
+#endif
+
+#endif
