@@ -18,7 +18,7 @@ Microservices DevTools
 [Enable TLS](#enable-tls)  
 [Create a simple Nginx API gateway](#create-a-simple-nginx-api-gateway)  
 
-## <a name="install-system-dependencies"></a>Install system dependencies
+### Install system dependencies
 ```bash
 sudo apt install clang make curl git python autoconf libtool-bin libexpat1-dev \
                  cmake libssl-dev libmariadb-dev libpq-dev libsqlite3-dev \
@@ -26,13 +26,13 @@ sudo apt install clang make curl git python autoconf libtool-bin libexpat1-dev \
                  libaprutil1-dbd-pgsql libaprutil1-dbd-sqlite3 libjson-c-dev
 ```
 
-## Install GNUstep OBJ-C support (optional)
+### Install GNUstep OBJ-C support (optional)
 ```bash
 sudo apt install gnustep-devel gobjc \
   && ln -s /usr/lib/gcc/x86_64-linux-gnu/10/include/objc /usr/local/include/objc
 ```
 
-## Create a new microservices-based project
+### Create a new microservices-based project
 #### Project structure
 ```
 myapp/
@@ -47,7 +47,7 @@ myapp/
 mkdir -p myapp/api/helloworld
 ```
 
-## Get the latest verison of Apache Portable Runtime (optional)
+### Get the latest verison of Apache Portable Runtime (optional)
 ```bash
 git clone https://github.com/apache/apr.git apr
 ```
@@ -64,7 +64,7 @@ mkdir -p myapp/apr-2 \
   && cd ..
 ```
 
-## Get the latest version of JSON-c (optional)
+### Get the latest version of JSON-c (optional)
 ```bash
 git clone https://github.com/json-c/json-c.git json-c
 ```
@@ -82,7 +82,7 @@ mkdir -p myapp/json-c \
   && rm -rf jsonc /tmp/jsonc
 ```
 
-## Get the latest version of Mongoose
+### Get the latest version of Mongoose
 ```bash
 git clone https://github.com/cesanta/mongoose.git mongoose
 ```
@@ -91,7 +91,7 @@ mkdir -p myapp/mongoose \
   && cp mongoose/mongoose.* myapp/mongoose
 ```
 
-## Get latest version of MicroDevTools
+### Get latest version of MicroDevTools
 ```bash
 git clone https://github.com/riccardovacirca/microdevtools.git microdevtools
 ```
@@ -100,7 +100,7 @@ mkdir -p myapp/microdevtools \
   && cp microdevtools/microdevtools.* myapp/microdevtools
 ```
 
-## Create a HelloWorld microservice in C
+### Create a HelloWorld microservice in C
 <code>myapp/api/helloworld/helloworld.c</code>
 ```c
 #include "microdevtools.h"
@@ -198,7 +198,7 @@ run:
 .PHONY: all debug run
 ```
 
-## Create a HelloWorld microservice in Objective-c
+### Create a HelloWorld microservice in Objective-c
 <code>myapp/api/helloworld/helloworld.m</code>
 ```c
 #import "microdevtools.h"
@@ -302,7 +302,7 @@ run:
 .PHONY: all debug run
 ```
 
-## Compile and run the HelloWorld microservice (debug version)
+### Compile and run the HelloWorld microservice (debug version)
 ```bash
 make debug && make run
 ```
@@ -311,19 +311,19 @@ make debug && make run
 curl -i "http://localhost:2310/api/helloworld"
 ```
 
-## Connect to a PostgreSQL database
+### Connect to a PostgreSQL database
 Connect to a PostgreSQL database by starting the service with the following additional arguments from the command line:
 ```
 -d pgsql -D "hostaddr=127.0.0.1 host=localhost port=5432 user=bob password=secret dbname=test"
 ```
 
-## Connect to a MySQL/MariaDB database
+### Connect to a MySQL/MariaDB database
 Connect to a MySQL/MariaDB database by starting the service with the following additional arguments from the command line:
 ```
 -d mysql -D "host=127.0.0.1,port=3306,user=bob,pass=secret,dbname=test"
 ```
 
-## Enable TLS
+### Enable TLS
 Create and run a <code>myapp/api/helloworld/cert.sh</code> bash script:
 ```bash
 #!/bin/bash
@@ -394,7 +394,7 @@ make debug && make run
 curl -k -i "https://localhost:2443/api/helloworld"
 ```
 
-## Create a simple Nginx API gateway
+### Create a simple Nginx API gateway
 <code>/etc/nginx/sites-available/myapp.conf</code>
 ```bash
 sudo nano /etc/nginx/sites-available/myapp.conf
