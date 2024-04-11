@@ -461,6 +461,41 @@ void z_pdf(apr_pool_t *m, const char *s, const char *d, double w, double h);
 
 #endif /* _ZET_HAS_PDF */
 
+
+#ifdef download
+#define Z_APACHE_RESPONSE_BUFFER(r, bf, sz, ct) do {\
+  if (sz > 0) {\
+    void *buffer = (void*)apr_palloc(r->pool, sizeof(unsigned char)*(sz));\
+    if (buffer != NULL) {\
+      memcpy(buffer, bf, sz);\
+      ap_set_content_type(r, ct);\
+      ap_rwrite(buffer, sz, r);\
+    }\
+  }\
+} while (0)
+
+#define Z_APACHE_RESPONSE_DOWNLOAD(r, bf, sz, fn) do {\
+  if ((r!=NULL) && (bf!=NULL) && (sz > 0) && (fn!=NULL)){\
+    apr_table_setn(r->headers_out, "Expires", "Mon, 23 Oct 1972 16:00:00 GMT");\
+    apr_table_setn(r->headers_out, "Pragma", "hack");\
+    apr_table_setn(r->headers_out, "Cache-Control", "must-revalidate,post-check=0,pre-check=0");\
+    apr_table_setn(r->headers_out, "Cache-Control", "private");\
+    apr_table_setn(r->headers_out, "Content-Description", "File Transfer");\
+    apr_table_setn(r->headers_out, "Content-Disposition", apr_psprintf(r->pool, "attachment; filename=\"%s\"", fn));\
+    apr_table_setn(r->headers_out, "Content-Transfer-Encoding", "binary");\
+    apr_table_setn(r->headers_out, "Content-Length", apr_psprintf(r->pool, "%" APR_UINT64_T_FMT, sz));\
+    Z_APACHE_RESPONSE_BUFFER(r, bf, sz, "application/download");\
+  }\
+} while (0)
+
+#endif
+
+
+
+
+
+
+
 #ifdef __cplusplus
 }
 #endif
