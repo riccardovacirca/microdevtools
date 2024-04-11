@@ -1,7 +1,9 @@
 # MicroDevTools
+
 Microservices DevTools
 
-### Table of Contents
+#### Table of Contents
+
 [Install system dependencies](#install-system-dependencies)  
 [Create a new microservices-based project](#create-a-new-microservices-based-project)  
 [Install GNUstep OBJ-C support (optional)](#install-gnustep-obj-c-support-optional)  
@@ -19,6 +21,7 @@ Microservices DevTools
 [Create a simple Nginx API gateway](#create-a-simple-nginx-api-gateway)  
 
 ### Install system dependencies
+
 ```bash
 sudo apt install clang make curl git python autoconf libtool-bin libexpat1-dev \
                  cmake libssl-dev libmariadb-dev libpq-dev libsqlite3-dev \
@@ -27,6 +30,7 @@ sudo apt install clang make curl git python autoconf libtool-bin libexpat1-dev \
 ```
 
 ### Install GNUstep OBJ-C support (optional)
+
 ```bash
 sudo apt install gnustep-devel gobjc \
   && ln -s /usr/lib/gcc/x86_64-linux-gnu/10/include/objc /usr/local/include/objc
@@ -34,9 +38,11 @@ sudo apt install gnustep-devel gobjc \
 
 ### Create a new microservices-based project
 #### Project structure
+
 ```
+mongoose/
+microdevtools/
 myapp/
-  ...
   api/
     helloworld/
       Makefile
@@ -47,10 +53,24 @@ myapp/
 mkdir -p myapp/api/helloworld
 ```
 
+### Get the latest version of Mongoose
+
+```bash
+git clone https://github.com/cesanta/mongoose.git mongoose
+```
+
+### Get latest version of MicroDevTools
+
+```bash
+git clone https://github.com/riccardovacirca/microdevtools.git microdevtools
+```
+
 ### Get the latest verison of Apache Portable Runtime (optional)
+
 ```bash
 git clone https://github.com/apache/apr.git apr
 ```
+
 ```bash
 mkdir -p myapp/apr-2 \
   && cd apr \
@@ -65,9 +85,11 @@ mkdir -p myapp/apr-2 \
 ```
 
 ### Get the latest version of JSON-c (optional)
+
 ```bash
 git clone https://github.com/json-c/json-c.git json-c
 ```
+
 ```bash
 mkdir -p myapp/json-c \
   && mkdir jsonc \
@@ -82,26 +104,10 @@ mkdir -p myapp/json-c \
   && rm -rf jsonc /tmp/jsonc
 ```
 
-### Get the latest version of Mongoose
-```bash
-git clone https://github.com/cesanta/mongoose.git mongoose
-```
-```bash
-mkdir -p myapp/mongoose \
-  && cp mongoose/mongoose.* myapp/mongoose
-```
-
-### Get latest version of MicroDevTools
-```bash
-git clone https://github.com/riccardovacirca/microdevtools.git microdevtools
-```
-```bash
-mkdir -p myapp/microdevtools \
-  && cp microdevtools/microdevtools.* myapp/microdevtools
-```
-
 ### Create a HelloWorld microservice in C
+
 <code>myapp/api/helloworld/helloworld.c</code>
+
 ```c
 #include "microdevtools.h"
 
@@ -116,7 +122,9 @@ void ns_handler(ns_service_t *s) {
   ns_route(s, "GET", "/api/helloworld", HelloWorldController);
 }
 ```
+
 <code>myapp/api/helloworld/main.c</code>
+
 ```c
 #include "microdevtools.h"
 
@@ -173,14 +181,19 @@ int main(int argc, char **argv) {
   return 0;
 }
 ```
+
 <code>Makefile</code>
+
 ```makefile
 CC:=clang
 CFLAGS:=-std=gnu99 -D_MONGOOSE
-INCLUDES:=-I. -I../../apr-2/include -I../../json-c/include -I../../mongoose -I../../microdevtools
-LIBS:=-L../../apr-2/lib -L../../json-c/lib
+INCLUDES:=-I. -I/usr/include/apr-1.0 -I/usr/include/json-c -I../../../mongoose -I../../../microdevtools
 LDFLAGS:=-lapr-2 -ljson-c -lssl -lcrypto
-SRC:=../../mongoose/mongoose.c ../../microdevtools/microdevtools.c helloworld.c main.c
+SRC:=../../../mongoose/mongoose.c ../../../microdevtools/microdevtools.c helloworld.c main.c
+
+# LIBS:=-L../../../apr-2/lib -L../../../json-c/lib
+# LOAD_LIB:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib 
+
 # TLS:=-DMG_TLS=MG_TLS_OPENSSL -D_TLS
 
 all:
@@ -192,14 +205,23 @@ debug:
 	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
 
 run:
-	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib \
-	./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
+	$(LOAD_LIB) ./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
 
 .PHONY: all debug run
 ```
 
+To use a different installation of apr and json-c, uncomment the following lines
+and set the correct path:
+
+```makefile
+# LIBS:=-L../../../apr-2/lib -L../../../json-c/lib
+# LOAD_LIB:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib 
+```
+
 ### Create a HelloWorld microservice in Objective-c
+
 <code>myapp/api/helloworld/helloworld.m</code>
+
 ```c
 #import "microdevtools.h"
 
@@ -217,7 +239,9 @@ void ns_handler(ns_service_t *s) {
   ns_route(s, "GET", "/api/helloworld", HelloWorldController);
 }
 ```
+
 <code>myapp/api/helloworld/main.m</code>
+
 ```c
 #import "microdevtools.h"
 
@@ -274,7 +298,9 @@ int main(int argc, char **argv) {
   return 0;
 }
 ```
+
 <code>Makefile</code>
+
 ```makefile
 CC:=clang
 CFLAGS:=-std=gnu99 -D_MONGOOSE -D_NATIVE_OBJC_EXCEPTIONS \
@@ -285,6 +311,10 @@ LIBS:=-L../../apr-2/lib -L../../json-c/lib \
       -L `gnustep-config --variable=GNUSTEP_SYSTEM_LIBRARIES`
 LDFLAGS:=-lapr-2 -ljson-c -lssl -lcrypto -lgnustep-base -lobjc
 SRC:=../../mongoose/mongoose.c ../../microdevtools/microdevtools.c helloworld.m main.m
+
+# LIBS:=-L../../../apr-2/lib -L../../../json-c/lib
+# LOAD_LIB:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib 
+
 # TLS:=-DMG_TLS=MG_TLS_OPENSSL -D_TLS
 
 all:
@@ -296,35 +326,53 @@ debug:
 	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
 
 run:
-	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib \
-	./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
+	$(LOAD_LIB) ./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
 
 .PHONY: all debug run
 ```
 
+To use a different installation of apr and json-c, uncomment the following lines
+and set the correct path:
+
+```makefile
+# LIBS:=-L../../../apr-2/lib -L../../../json-c/lib
+# LOAD_LIB:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib 
+```
+
 ### Compile and run the HelloWorld microservice (debug version)
+
 ```bash
 make debug && make run
 ```
+
 <code>TEST HTTP</code>
+
 ```bash
 curl -i "http://localhost:2310/api/helloworld"
 ```
 
 ### Connect to a PostgreSQL database
-Connect to a PostgreSQL database by starting the service with the following additional arguments from the command line:
+
+Connect to a PostgreSQL database by starting the service with the following
+additional arguments from the command line:
+
 ```
 -d pgsql -D "hostaddr=127.0.0.1 host=localhost port=5432 user=bob password=secret dbname=test"
 ```
 
 ### Connect to a MySQL/MariaDB database
-Connect to a MySQL/MariaDB database by starting the service with the following additional arguments from the command line:
+
+Connect to a MySQL/MariaDB database by starting the service with the following
+additional arguments from the command line:
+
 ```
 -d mysql -D "host=127.0.0.1,port=3306,user=bob,pass=secret,dbname=test"
 ```
 
 ### Enable TLS
+
 Create and run a <code>myapp/api/helloworld/cert.sh</code> bash script:
+
 ```bash
 #!/bin/bash
 mkdir -p /tmp/microdevtools
@@ -378,27 +426,37 @@ echo -e "$server_key_variable" >> certs.h
 echo -e "#endif" >> certs.h
 echo -e "#endif /* CERT_H */" >> certs.h
 ```
+
 ```bash
 chmod +x cert.sh && ./cert.sh helloworld
 ```
+
 Uncomment the following line in the service Makefile:
+
 ```makefile
 # TLS:=-DMG_TLS=MG_TLS_OPENSSL -D_TLS
 ```
+
 Compile and run the HelloWorld microservice (debug version)
+
 ```bash
 make debug && make run
 ```
+
 <code>TEST HTTPS</code>
+
 ```bash
 curl -k -i "https://localhost:2443/api/helloworld"
 ```
 
 ### Create a simple Nginx API gateway
+
 <code>/etc/nginx/sites-available/myapp.conf</code>
+
 ```bash
 sudo nano /etc/nginx/sites-available/myapp.conf
 ```
+
 ```nginx
 include /etc/nginx/sites-available/myapp_*_upstream.conf;
 server {
@@ -410,28 +468,36 @@ server {
   }
 }
 ```
+
 <code>/etc/nginx/sites-available/myapp_hello_location.conf</code>
+
 ```bash
 sudo nano /etc/nginx/sites-available/myapp_hello_location.conf
 ```
+
 ```nginx
 location /api/helloworld/ {
   rewrite ^/api/helloworld(.*) /api$1 break;
   proxy_pass http://myapp-helloworld;
 }
 ```
+
 <code>/etc/nginx/sites-available/myapp_*_upstream.conf</code>
+
 ```bash
 sudo nano /etc/nginx/sites-available/myapp_*_upstream.conf
 ```
+
 ```nginx
 upstream myapp-helloworld {
   server localhost:2310 fail_timeout=10s max_fails=3;
 }
 ```
+
 ```bash
 sudo nginx -t
 ```
+
 ```bash
 sudo service nginx restart
 ```
