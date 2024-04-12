@@ -203,6 +203,17 @@ EXTRA_INCLUDES:=-I /usr/include/apr-1.0 -I/usr/include/json-c
 # LD_LIBRARY_LOAD:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib 
 # TLS:=-DMG_TLS=MG_TLS_OPENSSL -D_TLS
 
+RUN:=./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
+
+ifdef dbd
+ifeq ($(dbd),pgsql)
+RUN:=$(RUN) -d pgsql -D "hostaddr=127.0.0.1 host=localhost port=5432 user=bob password=secret dbname=test"
+endif
+ifeq ($(dbd),mysql)
+RUN:=$(RUN) -d mysql -D "host=127.0.0.1,port=3306,user=bob,pass=secret,dbname=test"
+endif
+endif
+
 all:
 	$(eval CFLAGS:=$(CFLAGS) -D_DAEMON $(TLS))
 	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(EXTRA_INCLUDES) $(LIBS) $(EXTRA_LIBS) $(LDFLAGS)
@@ -212,7 +223,7 @@ debug:
 	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(EXTRA_INCLUDES) $(LIBS) $(EXTRA_LIBS) $(LDFLAGS)
 
 run:
-	$(LD_LIBRARY_LOAD) ./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
+	$(LD_LIBRARY_LOAD) $(RUN)
 
 .PHONY: all debug run
 ```
@@ -331,6 +342,17 @@ EXTRA_INCLUDES:=-I /usr/include/apr-1.0 -I/usr/include/json-c
 # LD_LIBRARY_LOAD:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib 
 # TLS:=-DMG_TLS=MG_TLS_OPENSSL -D_TLS
 
+RUN:=./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
+
+ifdef db
+ifeq ($(db),pgsql)
+RUN:=$(RUN) -d pgsql -D "hostaddr=127.0.0.1 host=localhost port=5432 user=bob password=secret dbname=test"
+endif
+ifeq ($(db),mysql)
+RUN:=$(RUN) -d mysql -D "host=127.0.0.1,port=3306,user=bob,pass=secret,dbname=test"
+endif
+endif
+
 all:
 	$(eval CFLAGS:=$(CFLAGS) -D_DAEMON $(TLS))
 	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(EXTRA_INCLUDES) $(LIBS) $(EXTRA_LIBS) $(LDFLAGS)
@@ -340,7 +362,7 @@ debug:
 	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(EXTRA_INCLUDES) $(LIBS) $(EXTRA_LIBS) $(LDFLAGS)
 
 run:
-	$(LD_LIBRARY_LOAD) ./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
+	$(LD_LIBRARY_LOAD) $(RUN)
 
 .PHONY: all debug run
 ```
@@ -368,22 +390,34 @@ curl -i "http://localhost:2310/api/helloworld"
 
 ### Connect to a PostgreSQL database
 
-Connect to a PostgreSQL database by starting the service with the following
-additional arguments from the command line:
-
+```bash
+sudo apt install postgresql && sudo systemctl start postgresql && sudo -u postgres psql
 ```
--d pgsql -D "hostaddr=127.0.0.1 host=localhost port=5432 user=bob password=secret dbname=test"
+```sql
+CREATE USER nome_utente WITH PASSWORD 'password';
+CREATE DATABASE nome_database OWNER nome_utente;
+GRANT ALL PRIVILEGES ON DATABASE nome_database TO nome_utente;
+\q
+```
+```bash
+cd myapp/api/helloworld && make debug && make run dbd=pgsql
 ```
 
 ### Connect to a MySQL/MariaDB database
 
-Connect to a MySQL/MariaDB database by starting the service with the following
-additional arguments from the command line:
-
-```
--d mysql -D "host=127.0.0.1,port=3306,user=bob,pass=secret,dbname=test"
+```bash
+sudo apt install mariadb-server && sudo mysql
 ```
 
+```sql
+create database test;
+create user 'bob'@'localhost' identified by 'secret';
+grant all on test.* to 'bob'@'localhost';
+```
+
+```bash
+cd myapp/api/helloworld && make debug && make run dbd=mysql
+```
 ### Enable TLS
 
 Create and run a <code>myapp/api/helloworld/cert.sh</code> bash script:
