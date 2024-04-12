@@ -354,7 +354,7 @@ and set the correct path:
 ### Compile and run the HelloWorld microservice (debug version)
 
 ```bash
-make debug && make run
+cd myapp/api/helloworld && make debug && make run
 ```
 
 <code>TEST HTTP</code>
