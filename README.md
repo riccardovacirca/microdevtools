@@ -192,22 +192,24 @@ nano myapp/api/helloworld/Makefile
 ```makefile
 CC:=clang
 CFLAGS:=-std=gnu99 -D_MONGOOSE
-INCLUDES:=-I. -I/usr/include/apr-1.0 -I/usr/include/json-c -I../../../mongoose -I../../../microdevtools
-LDFLAGS:=-lapr-2 -ljson-c -lssl -lcrypto
+INCLUDES:=-I. -I../../../mongoose -I../../../microdevtools
+LDFLAGS:=-lapr-1 -laprutil-1 -ljson-c -lssl -lcrypto
 SRC:=../../../mongoose/mongoose.c ../../../microdevtools/microdevtools.c helloworld.c main.c
 
-# LIBS:=-L../../../apr-2/lib -L../../../json-c/lib
-# LOAD_LIB:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib 
+EXTRA_INCLUDES:=-I /usr/include/apr-1.0 -I/usr/include/json-c
 
+# EXTRA_INCLUDES:=-I../../../apr-2/include -I../../../json-c/include
+# EXTRA_LIBS:=-L../../../apr-2/lib -L../../../json-c/lib
+# LOAD_LIB:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib 
 # TLS:=-DMG_TLS=MG_TLS_OPENSSL -D_TLS
 
 all:
 	$(eval CFLAGS:=$(CFLAGS) -D_DAEMON $(TLS))
-	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(EXTRA_INCLUDES) $(LIBS) $(EXTRA_LIBS) $(LDFLAGS)
 
 debug:
 	$(eval CFLAGS:=$(CFLAGS) $(TLS) -g -D_DEBUG)
-	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(EXTRA_INCLUDES) $(LIBS) $(EXTRA_LIBS) $(LDFLAGS)
 
 run:
 	$(LOAD_LIB) ./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
@@ -219,8 +221,10 @@ To use a different installation of apr and json-c, uncomment the following lines
 and set the correct path:
 
 ```makefile
-# LIBS:=-L../../../apr-2/lib -L../../../json-c/lib
+# EXTRA_INCLUDES:=-I../../../apr-2/include -I../../../json-c/include
+# EXTRA_LIBS:=-L../../../apr-2/lib -L../../../json-c/lib
 # LOAD_LIB:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib 
+# TLS:=-DMG_TLS=MG_TLS_OPENSSL -D_TLS
 ```
 
 ### Create a HelloWorld microservice in Objective-c
@@ -314,27 +318,26 @@ nano myapp/api/helloworld/Makefile
 
 ```makefile
 CC:=clang
-CFLAGS:=-std=gnu99 -D_MONGOOSE -D_NATIVE_OBJC_EXCEPTIONS \
-        -fconstant-string-class=NSConstantString
-INCLUDES:=-I. -I../../apr-2/include -I../../json-c/include -I../../mongoose \
-          -I../../microdevtools -I `gnustep-config --variable=GNUSTEP_SYSTEM_HEADERS`
-LIBS:=-L../../apr-2/lib -L../../json-c/lib \
-      -L `gnustep-config --variable=GNUSTEP_SYSTEM_LIBRARIES`
-LDFLAGS:=-lapr-2 -ljson-c -lssl -lcrypto -lgnustep-base -lobjc
-SRC:=../../mongoose/mongoose.c ../../microdevtools/microdevtools.c helloworld.m main.m
+CFLAGS:=-D_MONGOOSE -D_NATIVE_OBJC_EXCEPTIONS -fconstant-string-class=NSConstantString
+INCLUDES:=-I. -I../../../mongoose -I../../../microdevtools -I `gnustep-config --variable=GNUSTEP_SYSTEM_HEADERS`
+LIBS:=-L `gnustep-config --variable=GNUSTEP_SYSTEM_LIBRARIES`
+LDFLAGS:=-lapr-1 -laprutil-1 -ljson-c -lssl -lcrypto -lgnustep-base -lobjc
+SRC:=../../../mongoose/mongoose.c ../../../microdevtools/microdevtools.c helloworld.m main.m
 
-# LIBS:=-L../../../apr-2/lib -L../../../json-c/lib
+EXTRA_INCLUDES:=-I /usr/include/apr-1.0 -I/usr/include/json-c
+
+# EXTRA_INCLUDES:=-I../../../apr-2/include -I../../../json-c/include
+# EXTRA_LIBS:=-L../../../apr-2/lib -L../../../json-c/lib
 # LOAD_LIB:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib 
-
 # TLS:=-DMG_TLS=MG_TLS_OPENSSL -D_TLS
 
 all:
 	$(eval CFLAGS:=$(CFLAGS) -D_DAEMON $(TLS))
-	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(EXTRA_INCLUDES) $(LIBS) $(EXTRA_LIBS) $(LDFLAGS)
 
 debug:
 	$(eval CFLAGS:=$(CFLAGS) $(TLS) -g -D_DEBUG)
-	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(EXTRA_INCLUDES) $(LIBS) $(EXTRA_LIBS) $(LDFLAGS)
 
 run:
 	$(LOAD_LIB) ./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
@@ -346,7 +349,8 @@ To use a different installation of apr and json-c, uncomment the following lines
 and set the correct path:
 
 ```makefile
-# LIBS:=-L../../../apr-2/lib -L../../../json-c/lib
+# EXTRA_INCLUDES:=-I../../../apr-2/include -I../../../json-c/include
+# EXTRA_LIBS:=-L../../../apr-2/lib -L../../../json-c/lib
 # LOAD_LIB:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib 
 ```
 
