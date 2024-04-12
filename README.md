@@ -90,13 +90,14 @@ mkdir -p myapp/json-c \
 ### Create a new microservices-based project
 #### Project structure
 
-<pre><code>mongoose/
+<pre>mongoose/
 microdevtools/
 myapp/
   api/
     helloworld/
       Makefile
-      main.c</code></pre>
+      main.c
+</pre>
 
 ```bash
 mkdir -p myapp/api/helloworld
