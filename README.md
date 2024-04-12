@@ -106,7 +106,9 @@ mkdir -p myapp/json-c \
 
 ### Create a HelloWorld microservice in C
 
-<code>myapp/api/helloworld/helloworld.c</code>
+```bash
+nano myapp/api/helloworld/helloworld.c
+```
 
 ```c
 #include "microdevtools.h"
@@ -123,7 +125,9 @@ void ns_handler(ns_service_t *s) {
 }
 ```
 
-<code>myapp/api/helloworld/main.c</code>
+```bash
+nano myapp/api/helloworld/main.c
+```
 
 ```c
 #include "microdevtools.h"
@@ -182,7 +186,9 @@ int main(int argc, char **argv) {
 }
 ```
 
-<code>Makefile</code>
+```bash
+nano myapp/api/helloworld/Makefile
+```
 
 ```makefile
 CC:=clang
@@ -220,7 +226,9 @@ and set the correct path:
 
 ### Create a HelloWorld microservice in Objective-c
 
-<code>myapp/api/helloworld/helloworld.m</code>
+```bash
+nano myapp/api/helloworld/helloworld.m
+```
 
 ```c
 #import "microdevtools.h"
@@ -240,7 +248,9 @@ void ns_handler(ns_service_t *s) {
 }
 ```
 
-<code>myapp/api/helloworld/main.m</code>
+```bash
+nano myapp/api/helloworld/main.m
+```
 
 ```c
 #import "microdevtools.h"
@@ -299,7 +309,9 @@ int main(int argc, char **argv) {
 }
 ```
 
-<code>Makefile</code>
+```bash
+nano myapp/api/helloworld/Makefile
+```
 
 ```makefile
 CC:=clang

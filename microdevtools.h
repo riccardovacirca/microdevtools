@@ -448,9 +448,9 @@ int mdt_server_init(apr_pool_t *mp, mdt_server_t **s, int argc, char *argv[], ch
 extern mdt_dbd_pool_t *dbd_pool;
 
 
-#ifndef _MDT_PDF
-#define _MDT_PDF
-#endif
+// #ifndef _MDT_PDF
+// #define _MDT_PDF
+// #endif
 
 #ifdef _MDT_PDF
 
