@@ -200,7 +200,7 @@ EXTRA_INCLUDES:=-I /usr/include/apr-1.0 -I/usr/include/json-c
 
 # EXTRA_INCLUDES:=-I../../../apr-2/include -I../../../json-c/include
 # EXTRA_LIBS:=-L../../../apr-2/lib -L../../../json-c/lib
-# LOAD_LIB:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib 
+# LD_LIBRARY_LOAD:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib 
 # TLS:=-DMG_TLS=MG_TLS_OPENSSL -D_TLS
 
 all:
@@ -212,7 +212,7 @@ debug:
 	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(EXTRA_INCLUDES) $(LIBS) $(EXTRA_LIBS) $(LDFLAGS)
 
 run:
-	$(LOAD_LIB) ./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
+	$(LD_LIBRARY_LOAD) ./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
 
 .PHONY: all debug run
 ```
@@ -223,7 +223,7 @@ and set the correct path:
 ```makefile
 # EXTRA_INCLUDES:=-I../../../apr-2/include -I../../../json-c/include
 # EXTRA_LIBS:=-L../../../apr-2/lib -L../../../json-c/lib
-# LOAD_LIB:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib 
+# LD_LIBRARY_LOAD:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib 
 # TLS:=-DMG_TLS=MG_TLS_OPENSSL -D_TLS
 ```
 
@@ -328,7 +328,7 @@ EXTRA_INCLUDES:=-I /usr/include/apr-1.0 -I/usr/include/json-c
 
 # EXTRA_INCLUDES:=-I../../../apr-2/include -I../../../json-c/include
 # EXTRA_LIBS:=-L../../../apr-2/lib -L../../../json-c/lib
-# LOAD_LIB:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib 
+# LD_LIBRARY_LOAD:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib 
 # TLS:=-DMG_TLS=MG_TLS_OPENSSL -D_TLS
 
 all:
@@ -340,7 +340,7 @@ debug:
 	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(EXTRA_INCLUDES) $(LIBS) $(EXTRA_LIBS) $(LDFLAGS)
 
 run:
-	$(LOAD_LIB) ./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
+	$(LD_LIBRARY_LOAD) ./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
 
 .PHONY: all debug run
 ```
@@ -351,7 +351,7 @@ and set the correct path:
 ```makefile
 # EXTRA_INCLUDES:=-I../../../apr-2/include -I../../../json-c/include
 # EXTRA_LIBS:=-L../../../apr-2/lib -L../../../json-c/lib
-# LOAD_LIB:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib 
+# LD_LIBRARY_LOAD:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib 
 ```
 
 ### Compile and run the HelloWorld microservice (debug version)
@@ -393,16 +393,17 @@ Create and run a <code>myapp/api/helloworld/cert.sh</code> bash script:
 mkdir -p /tmp/microdevtools
 
 if ! test -e "/tmp/microdevtools/ca_root.key"; then
-  openssl genrsa -out /tmp/microdevtools/ca_root.key 4096 \
-    && openssl req -new -x509 -days 365 -key /tmp/microdevtools/ca_root.key \
+  openssl genrsa -out /tmp/microdevtools/ca_root.key 4096
+  openssl req -new -x509 -days 365 -key /tmp/microdevtools/ca_root.key \
     -out /tmp/microdevtools/ca_root.crt -subj "/CN=MDT_ROOT_CA"
   rm -rf $1.key $1.crs $1.crt certs.h
 fi
 
 if ! test -e "$1.key"; then
-  openssl genrsa -out $1.key 2048 \
-    && openssl req -new -key $1.key -out $1.csr -subj "/CN=$1" \
-    && openssl x509 -req -days 365 -in $1.csr -CA /tmp/microdevtools/ca_root.crt -CAkey /tmp/microdevtools/ca_root.key -set_serial 01 -out $1.crt
+  openssl genrsa -out $1.key 2048
+  openssl req -new -key $1.key -out $1.csr -subj "/CN=$1"
+  openssl x509 -req -days 365 -in $1.csr -CA /tmp/microdevtools/ca_root.crt \
+    -CAkey /tmp/microdevtools/ca_root.key -set_serial 01 -out $1.crt
 fi
 
 ca_crt_file=/tmp/microdevtools/ca_root.crt
@@ -472,7 +473,7 @@ curl -k -i "https://localhost:2443/api/helloworld"
 sudo nano /etc/nginx/sites-available/myapp.conf
 ```
 
-```nginx
+```
 include /etc/nginx/sites-available/myapp_*_upstream.conf;
 server {
   listen 80;
@@ -490,7 +491,7 @@ server {
 sudo nano /etc/nginx/sites-available/myapp_hello_location.conf
 ```
 
-```nginx
+```
 location /api/helloworld/ {
   rewrite ^/api/helloworld(.*) /api$1 break;
   proxy_pass http://myapp-helloworld;
