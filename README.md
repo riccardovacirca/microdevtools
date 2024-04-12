@@ -36,23 +36,6 @@ sudo apt install gnustep-devel gobjc \
   && ln -s /usr/lib/gcc/x86_64-linux-gnu/10/include/objc /usr/local/include/objc
 ```
 
-### Create a new microservices-based project
-#### Project structure
-
-```
-mongoose/
-microdevtools/
-myapp/
-  api/
-    helloworld/
-      Makefile
-      main.c
-```
-
-```bash
-mkdir -p myapp/api/helloworld
-```
-
 ### Get the latest version of Mongoose
 
 ```bash
@@ -102,6 +85,21 @@ mkdir -p myapp/json-c \
   && rm -rf /tmp/jsonc \
   && cd .. \
   && rm -rf jsonc /tmp/jsonc
+```
+
+### Create a new microservices-based project
+#### Project structure
+
+<pre><code>mongoose/
+microdevtools/
+myapp/
+  api/
+    helloworld/
+      Makefile
+      main.c</code></pre>
+
+```bash
+mkdir -p myapp/api/helloworld
 ```
 
 ### Create a HelloWorld microservice in C
