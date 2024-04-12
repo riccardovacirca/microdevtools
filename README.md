@@ -205,13 +205,13 @@ EXTRA_INCLUDES:=-I /usr/include/apr-1.0 -I/usr/include/json-c
 
 RUN:=./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
 
-ifdef dbd
-ifeq ($(dbd),pgsql)
-RUN:=$(RUN) -d pgsql -D "hostaddr=127.0.0.1 host=localhost port=5432 user=bob password=secret dbname=test"
-endif
-ifeq ($(dbd),mysql)
-RUN:=$(RUN) -d mysql -D "host=127.0.0.1,port=3306,user=bob,pass=secret,dbname=test"
-endif
+ifdef db
+  ifeq ($(db),pgsql)
+    RUN:=$(RUN) -d pgsql -D "hostaddr=127.0.0.1 host=localhost port=5432 user=bob password=secret dbname=test"
+  endif
+  ifeq ($(db),mysql)
+    RUN:=$(RUN) -d mysql -D "host=127.0.0.1,port=3306,user=bob,pass=secret,dbname=test"
+  endif
 endif
 
 all:
@@ -345,12 +345,12 @@ EXTRA_INCLUDES:=-I /usr/include/apr-1.0 -I/usr/include/json-c
 RUN:=./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
 
 ifdef db
-ifeq ($(db),pgsql)
-RUN:=$(RUN) -d pgsql -D "hostaddr=127.0.0.1 host=localhost port=5432 user=bob password=secret dbname=test"
-endif
-ifeq ($(db),mysql)
-RUN:=$(RUN) -d mysql -D "host=127.0.0.1,port=3306,user=bob,pass=secret,dbname=test"
-endif
+  ifeq ($(db),pgsql)
+    RUN:=$(RUN) -d pgsql -D "hostaddr=127.0.0.1 host=localhost port=5432 user=bob password=secret dbname=test"
+  endif
+  ifeq ($(db),mysql)
+    RUN:=$(RUN) -d mysql -D "host=127.0.0.1,port=3306,user=bob,pass=secret,dbname=test"
+  endif
 endif
 
 all:
@@ -394,9 +394,9 @@ curl -i "http://localhost:2310/api/helloworld"
 sudo apt install postgresql && sudo systemctl start postgresql && sudo -u postgres psql
 ```
 ```sql
-CREATE USER nome_utente WITH PASSWORD 'password';
-CREATE DATABASE nome_database OWNER nome_utente;
-GRANT ALL PRIVILEGES ON DATABASE nome_database TO nome_utente;
+CREATE USER bob WITH PASSWORD 'secret';
+CREATE DATABASE test OWNER bob;
+GRANT ALL PRIVILEGES ON DATABASE test TO bob;
 \q
 ```
 ```bash
