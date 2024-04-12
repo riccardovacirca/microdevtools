@@ -17,6 +17,7 @@ Microservices DevTools
 [Compile and run the HelloWorld microservice (debug version)](#compile-and-run-the-helloworld-microservice-debug-version)  
 [Connect to a PostgreSQL database](#connect-to-a-postgresql-database)  
 [Connect to a MySQL/MariaDB database](#connect-to-a-mysql-mariadb-database)  
+[Connect to a SQLite3 database](#connect-to-a-sqlite3-database)  
 [Enable TLS](#enable-tls)  
 [Create a simple Nginx API gateway](#create-a-simple-nginx-api-gateway)  
 
