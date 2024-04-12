@@ -205,12 +205,15 @@ EXTRA_INCLUDES:=-I /usr/include/apr-1.0 -I/usr/include/json-c
 
 RUN:=./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
 
-ifdef db
-  ifeq ($(db),pgsql)
+ifdef dbd
+  ifeq ($(dbd),pgsql)
     RUN:=$(RUN) -d pgsql -D "hostaddr=127.0.0.1 host=localhost port=5432 user=bob password=secret dbname=test"
   endif
-  ifeq ($(db),mysql)
+  ifeq ($(dbd),mysql)
     RUN:=$(RUN) -d mysql -D "host=127.0.0.1,port=3306,user=bob,pass=secret,dbname=test"
+  endif
+  ifeq ($(dbd),sqlite3)
+    RUN:=$(RUN) -d sqlite3 -D "test.sqlite"
   endif
 endif
 
@@ -344,12 +347,15 @@ EXTRA_INCLUDES:=-I /usr/include/apr-1.0 -I/usr/include/json-c
 
 RUN:=./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
 
-ifdef db
-  ifeq ($(db),pgsql)
+ifdef dbd
+  ifeq ($(dbd),pgsql)
     RUN:=$(RUN) -d pgsql -D "hostaddr=127.0.0.1 host=localhost port=5432 user=bob password=secret dbname=test"
   endif
-  ifeq ($(db),mysql)
+  ifeq ($(dbd),mysql)
     RUN:=$(RUN) -d mysql -D "host=127.0.0.1,port=3306,user=bob,pass=secret,dbname=test"
+  endif
+  ifeq ($(dbd),sqlite3)
+    RUN:=$(RUN) -d sqlite3 -D "test.sqlite"
   endif
 endif
 
@@ -393,12 +399,35 @@ curl -i "http://localhost:2310/api/helloworld"
 ```bash
 sudo apt install postgresql && sudo systemctl start postgresql && sudo -u postgres psql
 ```
+
 ```sql
 CREATE USER bob WITH PASSWORD 'secret';
 CREATE DATABASE test OWNER bob;
 GRANT ALL PRIVILEGES ON DATABASE test TO bob;
 \q
 ```
+
+```bash
+psql -U bob -d test -h localhost
+```
+
+```sql
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(50) UNIQUE NOT NULL,
+  email VARCHAR(100) UNIQUE NOT NULL,
+  pass VARCHAR(100) NOT NULL
+);
+```
+
+```sql
+INSERT INTO users (username, email, pass)
+VALUES 
+  ('user1', 'user1@example.com', 'password1'),
+  ('user2', 'user2@example.com', 'password2'),
+  ('user3', 'user3@example.com', 'password3');
+```
+
 ```bash
 cd myapp/api/helloworld && make debug && make run dbd=pgsql
 ```
@@ -416,8 +445,55 @@ grant all on test.* to 'bob'@'localhost';
 ```
 
 ```bash
+mysql -u bob -p -h localhost
+```
+
+```sql
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(50) UNIQUE NOT NULL,
+  email VARCHAR(100) UNIQUE NOT NULL,
+  pass VARCHAR(100) NOT NULL
+);
+
+INSERT INTO users (user, email, pass) VALUES
+  ('user1', 'user1@example.com', 'password1'),
+  ('user2', 'user2@example.com', 'password2'),
+  ('user3', 'user3@example.com', 'password3');
+
+\q
+```
+
+```bash
 cd myapp/api/helloworld && make debug && make run dbd=mysql
 ```
+
+### Connect to a SQLite3 database
+
+```bash
+sqlite3 test.sqlite
+```
+
+```sql
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    pass VARCHAR(100) NOT NULL
+);
+
+INSERT INTO users (username, email, pass) VALUES
+    ('user1', 'user1@example.com', 'password1'),
+    ('user2', 'user2@example.com', 'password2'),
+    ('user3', 'user3@example.com', 'password3');
+
+.exit
+```
+
+```bash
+cd myapp/api/helloworld && make debug && make run dbd=sqlite3
+```
+
 ### Enable TLS
 
 Create and run a <code>myapp/api/helloworld/cert.sh</code> bash script:
