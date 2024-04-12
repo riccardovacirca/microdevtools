@@ -4,22 +4,22 @@ Microservices DevTools
 
 #### Table of Contents
 
-[Install system dependencies](#install-system-dependencies)  
-[Create a new microservices-based project](#create-a-new-microservices-based-project)  
-[Install GNUstep OBJ-C support (optional)](#install-gnustep-obj-c-support-optional)  
-[Create a new microservices-based project](#create-a-new-microservices-based-project)  
-[Get the latest verison of Apache Portable Runtime](#get-the-latest-verison-of-apache-portable-runtime)  
-[Get the latest version of JSON-c](#get-the-latest-version-of-json-c)  
-[Get the latest version of Mongoose](#get-the-latest-version-of-mongoose)  
-[Get latest version of MicroDevTools](#get-latest-version-of-microdevtools)  
-[Create a HelloWorld microservice in C](#create-a-helloworld-microservice-in-c)  
-[Create a HelloWorld microservice in Objective-c](#create-a-helloworld-microservice-in-objective-c)  
-[Compile and run the HelloWorld microservice (debug version)](#compile-and-run-the-helloworld-microservice-debug-version)  
-[Connect to a PostgreSQL database](#connect-to-a-postgresql-database)  
-[Connect to a MySQL/MariaDB database](#connect-to-a-mysql-mariadb-database)  
-[Connect to a SQLite3 database](#connect-to-a-sqlite3-database)  
-[Enable TLS](#enable-tls)  
-[Create a simple Nginx API gateway](#create-a-simple-nginx-api-gateway)  
+- [Install system dependencies](#install-system-dependencies)  
+- [Create a new microservices-based project](#create-a-new-microservices-based-project)  
+- [Install GNUstep OBJ-C support (optional)](#install-gnustep-obj-c-support-optional)  
+- [Create a new microservices-based project](#create-a-new-microservices-based-project)  
+- [Get the latest verison of Apache Portable Runtime](#get-the-latest-verison-of-apache-portable-runtime)  
+- [Get the latest version of JSON-c](#get-the-latest-version-of-json-c)  
+- [Get the latest version of Mongoose](#get-the-latest-version-of-mongoose)  
+- [Get latest version of MicroDevTools](#get-latest-version-of-microdevtools)  
+- [Create a HelloWorld microservice in C](#create-a-helloworld-microservice-in-c)  
+- [Create a HelloWorld microservice in Objective-c](#create-a-helloworld-microservice-in-objective-c)  
+- [Compile and run the HelloWorld microservice (debug version)](#compile-and-run-the-helloworld-microservice-debug-version)  
+- [Connect to a PostgreSQL database](#connect-to-a-postgresql-database)  
+- [Connect to a MySQL/MariaDB database](#connect-to-a-mysql-mariadb-database)  
+- [Connect to a SQLite3 database](#connect-to-a-sqlite3-database)  
+- [Enable TLS](#enable-tls)  
+- [Create a simple Nginx API gateway](#create-a-simple-nginx-api-gateway)  
 
 ### Install system dependencies
 
