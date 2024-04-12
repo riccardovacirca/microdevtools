@@ -60,7 +60,7 @@ int mdt_in_string(const char *s, const char *sub) {
 }
 
 // Allocates a string to a buffer of specified size
-char *ns_buffer(apr_pool_t *mp, const char *s, apr_size_t *bf_size) {
+char *mdt_buffer(apr_pool_t *mp, const char *s, apr_size_t *bf_size) {
   char *result = NULL, *ends = NULL, str[(*bf_size)+1];
   if (mp && s && *bf_size > 0) {
     ends = apr_cpystrn(str, s, (*bf_size)+1);
@@ -82,7 +82,7 @@ char *ns_buffer(apr_pool_t *mp, const char *s, apr_size_t *bf_size) {
   return result;
 }
 
-char *ns_str(apr_pool_t *mp, const char *s, apr_size_t sz) {
+char *mdt_str(apr_pool_t *mp, const char *s, apr_size_t sz) {
   char *result = NULL;
   if (mp && s && sz) {
     apr_size_t bf_size = sz;
@@ -91,7 +91,7 @@ char *ns_str(apr_pool_t *mp, const char *s, apr_size_t sz) {
   return result;
 }
 
-char *ns_trim(apr_pool_t *mp, const char *s) {
+char *mdt_trim(apr_pool_t *mp, const char *s) {
   char *result = NULL;
   if (mp && s) {
     int start = 0, end = strlen(s) - 1;
@@ -106,7 +106,7 @@ char *ns_trim(apr_pool_t *mp, const char *s) {
   return result;
 }
 
-// char *ns_trim(apr_pool_t *pool, const char *str) {
+// char *mdt_trim(apr_pool_t *pool, const char *str) {
 //   int start = 0, end = strlen(str) - 1;
 //   // Trova il primo carattere non vuoto dall'inizio della stringa
 //   while (isspace((unsigned char)str[start])) {
@@ -124,7 +124,7 @@ char *ns_trim(apr_pool_t *mp, const char *s) {
 //   return trimmed_str;
 // }
 
-const char *ns_strip_char(apr_pool_t *mp, const char *s, char c) {
+const char *mdt_strip_char(apr_pool_t *mp, const char *s, char c) {
   char *result = NULL;
   apr_size_t l, j = 0;
   if (mp && s) {
@@ -146,7 +146,7 @@ const char *ns_strip_char(apr_pool_t *mp, const char *s, char c) {
   return !result ? s : (const char*)result;
 }
 
-char *ns_slice(apr_pool_t *mp, const char *s, apr_size_t i, apr_size_t l) {
+char *mdt_slice(apr_pool_t *mp, const char *s, apr_size_t i, apr_size_t l) {
   char *result = NULL;
   apr_size_t len = 0;
   if (mp && s && (i >= 0) && (l > 0)) {
@@ -164,7 +164,7 @@ char *ns_slice(apr_pool_t *mp, const char *s, apr_size_t i, apr_size_t l) {
   return result;
 }
 
-const char *ns_str_replace(apr_pool_t *mp, const char *s, const char *f, const char *r) {
+const char *mdt_str_replace(apr_pool_t *mp, const char *s, const char *f, const char *r) {
   char *result = NULL;
   int i = 0, cnt = 0, r_len = 0, f_len = 0;
   if (mp && s && f && r) {
@@ -202,7 +202,7 @@ const char *ns_str_replace(apr_pool_t *mp, const char *s, const char *f, const c
   return !result ? s : (const char*)result;
 }
 
-const char *ns_replace_char(apr_pool_t *mp, const char *s, char f, char r) {
+const char *mdt_replace_char(apr_pool_t *mp, const char *s, char f, char r) {
   char *result = NULL;
   if (mp && s && f && r) {
     if((*s != '\0') && (f != r)) {
@@ -219,7 +219,7 @@ const char *ns_replace_char(apr_pool_t *mp, const char *s, char f, char r) {
   return !result ? s : (const char*)result;
 }
 
-char *ns_empty_string_make(apr_pool_t *mp) {
+char *mdt_empty_string_make(apr_pool_t *mp) {
   char *result = NULL;
   if (mp) {
     result = (char*)apr_palloc(mp, 1);
@@ -252,7 +252,7 @@ apr_array_header_t* mdt_split(apr_pool_t *mp, const char *s, const char *sp)
     while (ptr) {
       *ptr = '\0';
       if (strlen(str) <= 0) {
-        tmp = (const char*)ns_empty_string_make(mp);
+        tmp = (const char*)mdt_empty_string_make(mp);
         if (tmp) {
           APR_ARRAY_PUSH(result, const char*) = tmp;
         }
@@ -267,7 +267,7 @@ apr_array_header_t* mdt_split(apr_pool_t *mp, const char *s, const char *sp)
     }
   }
   if (strlen(str) <= 0) {
-    tmp = (const char*)ns_empty_string_make(mp);
+    tmp = (const char*)mdt_empty_string_make(mp);
     if (tmp) {
       APR_ARRAY_PUSH(result, const char*) = tmp;
     }
@@ -280,7 +280,7 @@ apr_array_header_t* mdt_split(apr_pool_t *mp, const char *s, const char *sp)
   return result;
 }
 
-char *ns_join(apr_pool_t *mp, apr_array_header_t *a, const char *sp)
+char *mdt_join(apr_pool_t *mp, apr_array_header_t *a, const char *sp)
 {
   int valid_input = 0, valid_array = 0;
   apr_size_t sp_l;
@@ -319,7 +319,7 @@ char *ns_join(apr_pool_t *mp, apr_array_header_t *a, const char *sp)
   return result;
 }
 
-char *ns_md5(apr_pool_t *mp, const char *s)
+char *mdt_md5(apr_pool_t *mp, const char *s)
 {
   char *result = NULL;
   apr_size_t l = 0;
@@ -342,7 +342,7 @@ char *ns_md5(apr_pool_t *mp, const char *s)
   return result;
 }
 
-char *ns_base64_encode(apr_pool_t *mp, const char *s)
+char *mdt_base64_encode(apr_pool_t *mp, const char *s)
 {
   char *result = NULL;
   apr_size_t l = 0;
@@ -358,7 +358,7 @@ char *ns_base64_encode(apr_pool_t *mp, const char *s)
   return result;
 }
 
-char *ns_base64_decode(apr_pool_t* mp, const char *s)
+char *mdt_base64_decode(apr_pool_t* mp, const char *s)
 {
   char *result = NULL;
   apr_size_t s_len = 0, max_rv_len = 0, rv_len = 0;
@@ -418,7 +418,7 @@ apr_table_entry_t* mdt_table_elt(apr_table_t *t, int i)
   return result;
 }
 
-char *ns_datetime(apr_pool_t *mp, apr_time_t t, const char *f)
+char *mdt_datetime(apr_pool_t *mp, apr_time_t t, const char *f)
 {
   char *result = NULL;
   apr_time_exp_t tm;
@@ -444,7 +444,7 @@ char *ns_datetime(apr_pool_t *mp, apr_time_t t, const char *f)
   return result;
 }
 
-char *ns_datetime_local(apr_pool_t *mp, apr_time_t t, const char *f)
+char *mdt_datetime_local(apr_pool_t *mp, apr_time_t t, const char *f)
 {
   char *result = NULL;
   apr_time_exp_t tm;
@@ -471,7 +471,7 @@ char *ns_datetime_local(apr_pool_t *mp, apr_time_t t, const char *f)
   return result;
 }
 
-char *ns_datetime_utc(apr_pool_t *mp, apr_time_t t, const char *f)
+char *mdt_datetime_utc(apr_pool_t *mp, apr_time_t t, const char *f)
 {
   apr_time_exp_t tm;
   apr_size_t size = 100;
@@ -610,10 +610,10 @@ apr_table_entry_t* mdt_table_entry(apr_table_t *t, int i)
 
 // Legge i dati dallo standard input e li restituisce come una stringa.
 // 'm' è il pool di memoria da utilizzare per l'allocazione di eventuali risorse.
-char *ns_pipein(apr_pool_t *mp)
+char *mdt_pipein(apr_pool_t *mp)
 {
   char *result = NULL;
-  char buf[NS_MAX_READ_BUFFER] = {0};
+  char buf[MDT_MAX_READ_BUFFER] = {0};
   apr_size_t l;
   apr_file_t *fd;
   apr_size_t bytes = MDT_MAX_READ_BUFFER - 1;
@@ -634,7 +634,7 @@ char *ns_pipein(apr_pool_t *mp)
   return result;
 }
 
-char *ns_env(const char *e, apr_pool_t *mp)
+char *mdt_env(const char *e, apr_pool_t *mp)
 {
   char *result;
   return mp && e && (apr_env_get(&result, e, mp) == APR_SUCCESS) ? result : NULL;
@@ -817,13 +817,13 @@ apr_array_header_t* mdt_json_parse_array(apr_pool_t *mp, json_object *jarr)
       entry = mdt_json_pair_init(mp);
       entry->type = MDT_JSON_T_ARRAY;
       entry->key = NULL;
-      entry->val = (void*)ns_json_parse_array(mp, jval);
+      entry->val = (void*)mdt_json_parse_array(mp, jval);
     } else if (type == json_type_object) {
       //entry = (mdt_json_pair_t*)apr_palloc(mp, sizeof(mdt_json_pair_t));
       entry = mdt_json_pair_init(mp);
       entry->type = MDT_JSON_T_OBJECT;
       entry->key = NULL;
-      entry->val = (void*)ns_json_parse(mp, jval);
+      entry->val = (void*)mdt_json_parse(mp, jval);
     } else {
       entry = mdt_json_array_entry_make(mp, type, NULL, jval);
     }
@@ -847,7 +847,7 @@ apr_array_header_t* mdt_json_parse(apr_pool_t *mp, json_object *jobj)
           entry = mdt_json_pair_init(mp);
           entry->type = MDT_JSON_T_OBJECT;
           entry->key = apr_pstrdup(mp, key);
-          entry->val = (void*)ns_json_parse(mp, jtmp);
+          entry->val = (void*)mdt_json_parse(mp, jtmp);
         }
       } break;
       case json_type_array: {
@@ -855,7 +855,7 @@ apr_array_header_t* mdt_json_parse(apr_pool_t *mp, json_object *jobj)
           entry = mdt_json_pair_init(mp);
           entry->type = MDT_JSON_T_ARRAY;
           entry->key = apr_pstrdup(mp, key);
-          entry->val = (void*)ns_json_parse_array(mp, jtmp);
+          entry->val = (void*)mdt_json_parse_array(mp, jtmp);
         }
       } break;
       default: {
@@ -878,7 +878,7 @@ apr_array_header_t* mdt_json_decode(apr_pool_t *mp, const char *s)
   return result;
 }
 
-const char *ns_json_encode(apr_pool_t *mp, const void *v, mdt_json_type_t tp)
+const char *mdt_json_encode(apr_pool_t *mp, const void *v, mdt_json_type_t tp)
 {
   int len;
   apr_table_entry_t *e;
@@ -1279,7 +1279,7 @@ int mdt_dbd_open(apr_pool_t *mp, mdt_dbd_t *d, const char *s, const char *c)
   return result;
 }
 
-const char *ns_dbd_escape(apr_pool_t *mp, mdt_dbd_t *d, const char *s)
+const char *mdt_dbd_escape(apr_pool_t *mp, mdt_dbd_t *d, const char *s)
 {
   return ((mp == NULL) || (d == NULL) || (s == NULL))
     ? NULL
@@ -1548,7 +1548,7 @@ apr_table_t* mdt_dbd_record(apr_array_header_t *r, int i)
     : NULL;
 }
 
-const char *ns_dbd_field_value(apr_array_header_t *res, int i, const char *k)
+const char *mdt_dbd_field_value(apr_array_header_t *res, int i, const char *k)
 {
   if (res == NULL || res->nelts <= 0 || i > (res->nelts-1)) return NULL;
   apr_table_t* rec = APR_ARRAY_IDX(res, i, apr_table_t*);
@@ -1566,11 +1566,11 @@ int mdt_dbd_close(mdt_dbd_t *d) {
   return d == NULL ? 0 : apr_dbd_close(d->drv, d->hdl);
 }
 
-const char *ns_dbd_driver_name(mdt_dbd_t *dbd) {
+const char *mdt_dbd_driver_name(mdt_dbd_t *dbd) {
   return dbd == NULL ? NULL : apr_dbd_name(dbd->drv);
 }
 
-const char *ns_dbd_error(mdt_dbd_t *d) {
+const char *mdt_dbd_error(mdt_dbd_t *d) {
   return (d == NULL) ? NULL : d->er_msg;
 }
 
@@ -1601,7 +1601,7 @@ mdt_http_request_t* mdt_http_request_alloc(apr_pool_t *mp)
   return result;
 }
 
-apr_table_t *ns_http_request_validate_args(mdt_http_request_t *r,
+apr_table_t *mdt_http_request_validate_args(mdt_http_request_t *r,
                                            mdt_request_validator_t *vd,
                                            int nargs) {
   int is_valid;
@@ -1620,11 +1620,11 @@ apr_table_t *ns_http_request_validate_args(mdt_http_request_t *r,
       } else if (v.type == MDT_REQUEST_T_DOUBLE) {
         is_valid = mdt_is_double(curr_v);
       } else if (v.type == MDT_REQUEST_T_STRING) {
-        is_valid = !ns_is_empty(curr_v);
+        is_valid = !mdt_is_empty(curr_v);
       } else if (v.type == MDT_REQUEST_T_PASSWORD) {
-        is_valid = !ns_is_empty(curr_v);
+        is_valid = !mdt_is_empty(curr_v);
       } else if (v.type == MDT_REQUEST_T_DATE) { // yyyy-mm-dd
-        if (!ns_is_empty(curr_v) && strlen(curr_v) == 10) {
+        if (!mdt_is_empty(curr_v) && strlen(curr_v) == 10) {
           apr_array_header_t *curr_v_ar = mdt_split(r->pool, curr_v, "-");
           if (curr_v_ar && curr_v_ar->nelts == 3) {
             const char *y = APR_ARRAY_IDX(curr_v_ar, 0, const char*);
@@ -1676,11 +1676,11 @@ apr_table_t* mdt_http_request_validate_multipart_args(mdt_http_request_t *r,
         } else if (v.type == MDT_REQUEST_T_DOUBLE) {
           is_valid = mdt_is_double(req_v);
         } else if (v.type == MDT_REQUEST_T_STRING) {
-          is_valid = !ns_is_empty(req_v);
+          is_valid = !mdt_is_empty(req_v);
         } else if (v.type == MDT_REQUEST_T_PASSWORD) {
-          is_valid = !ns_is_empty(req_v);
+          is_valid = !mdt_is_empty(req_v);
         } else if (v.type == MDT_REQUEST_T_DATE) { // yyyy-mm-dd
-          if (!ns_is_empty(req_v) && strlen(req_v) == 10) {
+          if (!mdt_is_empty(req_v) && strlen(req_v) == 10) {
             apr_array_header_t *req_v_ar = mdt_split(r->pool, req_v, "-");
             if (req_v_ar && req_v_ar->nelts == 3) {
               const char *y = APR_ARRAY_IDX(req_v_ar, 0, const char*);
@@ -1729,11 +1729,11 @@ void mdt_http_response_hd_set(mdt_http_response_t *r, const char *k, const char 
   }
 }
 
-const char *ns_http_response_hd_get(mdt_http_response_t *r, const char *k) {
+const char *mdt_http_response_hd_get(mdt_http_response_t *r, const char *k) {
   return r && k ? apr_table_get(r->headers, k) : NULL;
 }
 
-const char *ns_http_response_hd_serialize(mdt_http_response_t *r) {
+const char *mdt_http_response_hd_serialize(mdt_http_response_t *r) {
   const char *result = NULL;
   do {
     if (!r) break;
@@ -1828,7 +1828,7 @@ void mdt_printf(mdt_service_t *s, const char *fmt, ...) {
   }
 }
 
-char *ns_jwt_base64_encode(const unsigned char *s, int sz) {
+char *mdt_jwt_base64_encode(const unsigned char *s, int sz) {
   char *result = NULL;
   if (s && sz) {
     BIO *bio, *b64;
@@ -1847,7 +1847,7 @@ char *ns_jwt_base64_encode(const unsigned char *s, int sz) {
   return result;
 }
 
-unsigned char *ns_jwt_base64_decode(const char *s, int sz) {
+unsigned char *mdt_jwt_base64_decode(const char *s, int sz) {
   unsigned char *result = NULL;
   if (s && sz) {
     BIO *bio, *b64;
@@ -1869,7 +1869,7 @@ unsigned char *ns_jwt_base64_decode(const char *s, int sz) {
   return result;
 }
 
-char *ns_hmac_encode(const char *key, const char *s, apr_size_t sz) {
+char *mdt_hmac_encode(const char *key, const char *s, apr_size_t sz) {
   char *result = NULL;
   if (key && s && sz) {
     unsigned int hmac_len;
@@ -1881,7 +1881,7 @@ char *ns_hmac_encode(const char *key, const char *s, apr_size_t sz) {
   return result;
 }
 
-char *ns_jwt_token_create(apr_pool_t *mp, apr_table_t *claims, const char *key) {
+char *mdt_jwt_token_create(apr_pool_t *mp, apr_table_t *claims, const char *key) {
   char *result = NULL;
   const char *claims_str = NULL;
   char *enc_head = NULL, *enc_hmac = NULL, *enc_claims = NULL;
@@ -1919,7 +1919,7 @@ int mdt_jwt_token_validate(apr_pool_t *mp, const char *tok, const char *key) {
     enc_hmac = APR_ARRAY_IDX(tok_ar, 2, const char*);
   }
   if (enc_hmac) {
-    gen_hmac = (const char*)ns_hmac_encode(key, enc_claims, strlen(enc_claims));
+    gen_hmac = (const char*)mdt_hmac_encode(key, enc_claims, strlen(enc_claims));
   }
   if (gen_hmac) {
     result = (int)(strcmp(enc_hmac, gen_hmac) == 0);

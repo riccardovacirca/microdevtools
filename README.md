@@ -113,15 +113,15 @@ nano myapp/api/helloworld/helloworld.c
 ```c
 #include "microdevtools.h"
 
-int HelloWorldController(ns_service_t *s) {
-  ns_http_response_hd_set(s->response, "Content-Type", "application/json");
-  const char *msg = ns_json_encode(s->pool, "Hello, World!", NS_JSON_T_STRING);
-  ns_printf(s, "{\"err\":%s,\"log\":%s,\"out\":%s}", "false", "null", msg);
+int HelloWorldController(mdt_service_t *s) {
+  mdt_http_response_hd_set(s->response, "Content-Type", "application/json");
+  const char *msg = mdt_json_encode(s->pool, "Hello, World!", MDT_JSON_T_STRING);
+  mdt_printf(s, "{\"err\":%s,\"log\":%s,\"out\":%s}", "false", "null", msg);
   return 200;
 }
 
-void ns_handler(ns_service_t *s) {
-  ns_route(s, "GET", "/api/helloworld", HelloWorldController);
+void mdt_handler(mdt_service_t *s) {
+  mdt_route(s, "GET", "/api/helloworld", HelloWorldController);
 }
 ```
 
@@ -132,10 +132,10 @@ nano myapp/api/helloworld/main.c
 ```c
 #include "microdevtools.h"
 
-ns_dbd_pool_t *dbd_pool;
+mdt_dbd_pool_t *dbd_pool;
 volatile sig_atomic_t server_run = 1;
 
-void ns_signal_exit(int signum) {
+void mdt_signal_exit(int signum) {
   if (signum == SIGTERM || signum == SIGINT) {
     server_run = 0;
   }
@@ -143,43 +143,43 @@ void ns_signal_exit(int signum) {
 
 int main(int argc, char **argv) {
   struct sigaction sig_action;
-  ns_signal_handler(&sig_action, ns_signal_exit);
+  mdt_signal_handler(&sig_action, mdt_signal_exit);
   apr_status_t rv = apr_initialize();
   if (rv != APR_SUCCESS) exit(EXIT_FAILURE);
   apr_pool_t *mp;
   rv = apr_pool_create(&mp, NULL);
   if (rv != APR_SUCCESS) exit(EXIT_FAILURE);
-  ns_server_t *s = ns_server_alloc(mp);
+  mdt_server_t *s = mdt_server_alloc(mp);
   if (s == NULL) exit(EXIT_FAILURE);
   char *er_msg;
-  if (!ns_server_init(mp, &s, argc, argv, &(er_msg))) exit(EXIT_FAILURE);
+  if (!mdt_server_init(mp, &s, argc, argv, &(er_msg))) exit(EXIT_FAILURE);
   dbd_pool = NULL;
   if (s->dbd_driver != NULL) {
     if (s->dbd_conn_s != NULL) {
       rv = apr_dbd_init(mp);
       if (rv == APR_SUCCESS) {
-        if (!ns_dbd_pool_alloc(mp)) exit(EXIT_FAILURE);
-        if (!ns_dbd_pool_init(mp, s->dbd_driver, s->dbd_conn_s)) {
+        if (!mdt_dbd_pool_alloc(mp)) exit(EXIT_FAILURE);
+        if (!mdt_dbd_pool_init(mp, s->dbd_driver, s->dbd_conn_s)) {
           exit(EXIT_FAILURE);
         }
       }
     }
   }
-  if (DAEMON) ns_daemonize();
+  if (DAEMON) mdt_daemonize();
   if (MONGOOSE) {
     struct mg_mgr mgr;
     mg_mgr_init(&mgr);
     if (TLS && s->addr_s) {
-      mg_http_listen(&mgr, s->addr, ns_http_request_handler, NULL);
-      mg_http_listen(&mgr, s->addr_s, ns_http_request_handler, (void*)s);
+      mg_http_listen(&mgr, s->addr, mdt_http_request_handler, NULL);
+      mg_http_listen(&mgr, s->addr_s, mdt_http_request_handler, (void*)s);
     } else {
-      mg_http_listen(&mgr, s->addr, ns_http_request_handler, (void*)s);
+      mg_http_listen(&mgr, s->addr, mdt_http_request_handler, (void*)s);
     }
     while (server_run) mg_mgr_poll(&mgr, 1000);
     mg_mgr_free(&mgr);
   }
-  if(dbd_pool) ns_dbd_pool_destroy();
-  ns_server_destroy(s);
+  if(dbd_pool) mdt_dbd_pool_destroy();
+  mdt_server_destroy(s);
   apr_pool_destroy(mp);
   apr_terminate();
   return 0;
@@ -233,18 +233,18 @@ nano myapp/api/helloworld/helloworld.m
 ```c
 #import "microdevtools.h"
 
-int HelloWorldController(ns_service_t *s) {
+int HelloWorldController(mdt_service_t *s) {
   @autoreleasepool {
     NSString *hello;
-    ns_http_response_hd_set(s->response, "Content-Type", "application/json");
-    const char *msg = ns_json_encode(s->pool, "Hello, World!", NS_JSON_T_STRING);
-    ns_printf(s, "{\"err\":%s,\"log\":%s,\"out\":%s}", "false", "null", msg);
+    mdt_http_response_hd_set(s->response, "Content-Type", "application/json");
+    const char *msg = mdt_json_encode(s->pool, "Hello, World!", MDT_JSON_T_STRING);
+    mdt_printf(s, "{\"err\":%s,\"log\":%s,\"out\":%s}", "false", "null", msg);
     return 200;
   }
 }
 
-void ns_handler(ns_service_t *s) {
-  ns_route(s, "GET", "/api/helloworld", HelloWorldController);
+void mdt_handler(mdt_service_t *s) {
+  mdt_route(s, "GET", "/api/helloworld", HelloWorldController);
 }
 ```
 
@@ -255,10 +255,10 @@ nano myapp/api/helloworld/main.m
 ```c
 #import "microdevtools.h"
 
-ns_dbd_pool_t *dbd_pool;
+mdt_dbd_pool_t *dbd_pool;
 volatile sig_atomic_t server_run = 1;
 
-void ns_signal_exit(int signum) {
+void mdt_signal_exit(int signum) {
   if (signum == SIGTERM || signum == SIGINT) {
     server_run = 0;
   }
@@ -266,43 +266,43 @@ void ns_signal_exit(int signum) {
 
 int main(int argc, char **argv) {
   struct sigaction sig_action;
-  ns_signal_handler(&sig_action, ns_signal_exit);
+  mdt_signal_handler(&sig_action, mdt_signal_exit);
   apr_status_t rv = apr_initialize();
   if (rv != APR_SUCCESS) exit(EXIT_FAILURE);
   apr_pool_t *mp;
   rv = apr_pool_create(&mp, NULL);
   if (rv != APR_SUCCESS) exit(EXIT_FAILURE);
-  ns_server_t *s = ns_server_alloc(mp);
+  mdt_server_t *s = mdt_server_alloc(mp);
   if (s == NULL) exit(EXIT_FAILURE);
   char *er_msg;
-  if (!ns_server_init(mp, &s, argc, argv, &(er_msg))) exit(EXIT_FAILURE);
+  if (!mdt_server_init(mp, &s, argc, argv, &(er_msg))) exit(EXIT_FAILURE);
   dbd_pool = NULL;
   if (s->dbd_driver != NULL) {
     if (s->dbd_conn_s != NULL) {
       rv = apr_dbd_init(mp);
       if (rv == APR_SUCCESS) {
-        if (!ns_dbd_pool_alloc(mp)) exit(EXIT_FAILURE);
-        if (!ns_dbd_pool_init(mp, s->dbd_driver, s->dbd_conn_s)) {
+        if (!mdt_dbd_pool_alloc(mp)) exit(EXIT_FAILURE);
+        if (!mdt_dbd_pool_init(mp, s->dbd_driver, s->dbd_conn_s)) {
           exit(EXIT_FAILURE);
         }
       }
     }
   }
-  if (DAEMON) ns_daemonize();
+  if (DAEMON) mdt_daemonize();
   if (MONGOOSE) {
     struct mg_mgr mgr;
     mg_mgr_init(&mgr);
     if (TLS && s->addr_s) {
-      mg_http_listen(&mgr, s->addr, ns_http_request_handler, NULL);
-      mg_http_listen(&mgr, s->addr_s, ns_http_request_handler, (void*)s);
+      mg_http_listen(&mgr, s->addr, mdt_http_request_handler, NULL);
+      mg_http_listen(&mgr, s->addr_s, mdt_http_request_handler, (void*)s);
     } else {
-      mg_http_listen(&mgr, s->addr, ns_http_request_handler, (void*)s);
+      mg_http_listen(&mgr, s->addr, mdt_http_request_handler, (void*)s);
     }
     while (server_run) mg_mgr_poll(&mgr, 1000);
     mg_mgr_free(&mgr);
   }
-  if(dbd_pool) ns_dbd_pool_destroy();
-  ns_server_destroy(s);
+  if(dbd_pool) mdt_dbd_pool_destroy();
+  mdt_server_destroy(s);
   apr_pool_destroy(mp);
   apr_terminate();
   return 0;
