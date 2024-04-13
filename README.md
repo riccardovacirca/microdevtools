@@ -472,7 +472,7 @@ cd myapp/api/helloworld && make debug && make run dbd=mysql
 ### Connect to a SQLite3 database
 
 ```bash
-sqlite3 test.sqlite
+sudo apt install sqlite3 && sqlite3 test.sqlite
 ```
 
 ```sql
