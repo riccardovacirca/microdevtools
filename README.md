@@ -703,7 +703,7 @@ WantedBy=multi-user.target
 ```
 
 ```bash
-sudo chown -R root:root /etc/init.d/helloworld.service \
+sudo chown -R root:root /etc/systemd/system/helloworld.service \
   && sudo systemctl daemon-reload
 ```
 
