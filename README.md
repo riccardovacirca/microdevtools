@@ -495,7 +495,7 @@ INSERT INTO users (username, email, pass) VALUES
 cd myapp/api/helloworld && make debug && make run dbd=sqlite3
 ```
 
-### <a name="enable-tls"><a>Enable TLS
+### Enable TLS
 
 Create and run a <code>myapp/api/helloworld/cert.sh</code> bash script:
 
@@ -576,7 +576,7 @@ make debug && make run
 curl -k -i "https://localhost:2443/api/helloworld"
 ```
 
-### <a name="create-a-simple-nginx-api-gateway"><a>Create a simple Nginx API gateway
+### Create a simple Nginx API gateway
 
 <code>/etc/nginx/sites-available/myapp.conf</code>
 
