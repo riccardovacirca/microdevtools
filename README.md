@@ -495,7 +495,7 @@ INSERT INTO users (username, email, pass) VALUES
 cd myapp/api/helloworld && make debug && make run dbd=sqlite3
 ```
 
-### Enable TLS
+### Enable TLS (optional)
 
 ```bash
 nano myapp/api/helloworld/certs.sh
@@ -576,6 +576,139 @@ make debug && make run
 
 ```bash
 curl -k -i "https://localhost:2443/api/helloworld"
+```
+
+### Compile and install the microservice as a system service
+
+To build the microservice as a system daemon simply use <code>make</code> instead of <code>make debug</code> from the command line.
+
+```bash
+sudo cp helloworld /usr/bin/helloworld \
+  && sudo chown -R root:root /usr/bin/helloworld \
+  && sudo mkdir -p /var/log/helloworld
+```
+
+```bash
+sudo nano /etc/init.d/helloworld
+```
+
+```bash
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          helloworld
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Simple helloworld program
+# Description:       This script runs the helloworld program.
+### END INIT INFO
+
+# Variables
+HELLOWORLD_BIN="/usr/bin/helloworld -h 0.0.0.0 -p 2310 -P 2443 -l /var/log/helloworld/helloworld.log"
+PIDFILE="/var/run/helloworld.pid"
+
+do_start() {
+  if [ -f "$PIDFILE" ]; then
+    echo "The helloworld service is already running."
+    exit 1
+  fi
+
+  # Start the helloworld program
+  $HELLOWORLD_BIN &
+  # Store the process ID in the PID file
+  echo $! > "$PIDFILE"
+  echo "Started the helloworld service."
+}
+
+do_stop() {
+  if [ ! -f "$PIDFILE" ]; then
+    echo "The helloworld service is not running."
+    exit 1
+  fi
+
+  # Read the process ID from the PID file
+  PID=$(cat "$PIDFILE")
+  # Terminate the helloworld program
+  kill "$PID"
+  # Remove the PID file
+  rm "$PIDFILE"
+  echo "Stopped the helloworld service."
+}
+
+do_restart() {
+  do_stop
+  sleep 1
+  do_start
+}
+
+do_status() {
+  if [ -f "$PIDFILE" ]; then
+    PID=$(cat "$PIDFILE")
+    if ps -p "$PID" > /dev/null; then
+      echo "The helloworld service is running (PID: $PID)."
+    else
+      echo "The helloworld service is not running."
+    fi
+  else
+    echo "The helloworld service is not running."
+  fi
+}
+
+case "$1" in
+  start)
+    do_start
+    ;;
+  stop)
+    do_stop
+    ;;
+  restart)
+    do_restart
+    ;;
+  status)
+    do_status
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart|status}"
+    exit 1
+    ;;
+esac
+```
+
+```bash
+sudo chown -R root:root /etc/init.d/helloworld \
+  && sudo chmod +x /etc/init.d/helloworld
+```
+
+```bash
+sudo nano /etc/systemd/system/helloworld.service
+```
+
+```bash
+[Unit]
+Description=hello service
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=forking
+Restart=always
+RestartSec=1
+User=root
+ExecStart=/usr/bin/helloworld -h 0.0.0.0 -p 2310 -P 2443 -l /var/log/helloworld/helloworld.log
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+sudo chown -R root:root /etc/init.d/helloworld.service \
+  && sudo systemctl daemon-reload
+```
+
+```bash
+sudo systemctl start helloworld
 ```
 
 ### Create a simple Nginx API gateway
