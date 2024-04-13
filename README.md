@@ -588,12 +588,13 @@ sudo nano /etc/nginx/sites-available/myapp.conf
 include /etc/nginx/sites-available/myapp_*_upstream.conf;
 server {
   listen 80;
-  server_name localhost;
+  server_name remote.host;
   include /etc/nginx/sites-available/myapp_*_location.conf;
-  location / {
-    root /var/www/html/myapp;
-  }
 }
+```
+
+```bash
+sudo ln -s /etc/nginx/sites-available/myapp.conf /etc/nginx/sites-enabled/myapp.conf
 ```
 
 ```bash
@@ -601,8 +602,7 @@ sudo nano /etc/nginx/sites-available/myapp_helloworld_location.conf
 ```
 
 ```
-location /api/helloworld/ {
-  rewrite ^/api/helloworld(.*) /api$1 break;
+location /api/helloworld {
   proxy_pass http://myapp-helloworld;
 }
 ```
@@ -623,4 +623,14 @@ sudo nginx -t
 
 ```bash
 sudo service nginx restart
+```
+
+```bash
+make debug && make run
+```
+
+Run the following command from an external host:
+
+```bash
+curl -i http://remote.host/api/helloworld
 ```
