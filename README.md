@@ -56,14 +56,14 @@ git clone https://github.com/apache/apr.git apr
 ```
 
 ```bash
-mkdir -p myapp/apr-2 \
+mkdir -p apr-2 \
   && cd apr \
   && ./buildconf \
   && ./configure --prefix=/tmp/apr --with-mysql --with-pgsql --with-sqlite3 --with-odbc \
   && make \
   && make install \
-  && mv /tmp/apr/include/apr-2 ../myapp/apr-2/include \
-  && mv /tmp/apr/lib ../myapp/apr-2 \
+  && mv /tmp/apr/include/apr-2 ../apr-2/include \
+  && mv /tmp/apr/lib ../apr-2 \
   && rm -rf /tmp/apr \
   && cd ..
 ```
@@ -75,14 +75,14 @@ git clone https://github.com/json-c/json-c.git json-c
 ```
 
 ```bash
-mkdir -p myapp/json-c \
+mkdir -p json-c \
   && mkdir jsonc \
   && cd jsonc \
   && cmake ../json-c -DCMAKE_INSTALL_PREFIX=/tmp/jsonc \
   && make \
   && make install \
-  && mv /tmp/jsonc/include/json-c ../myapp/json-c/include \
-  && mv /tmp/jsonc/lib ../myapp/json-c/lib \
+  && mv /tmp/jsonc/include/json-c ../json-c/include \
+  && mv /tmp/jsonc/lib ../json-c/lib \
   && rm -rf /tmp/jsonc \
   && cd .. \
   && rm -rf jsonc /tmp/jsonc
@@ -93,21 +93,19 @@ mkdir -p myapp/json-c \
 
 <pre>mongoose/
 microdevtools/
-myapp/
-  api/
-    helloworld/
-      Makefile
-      main.c
+helloworld/
+  Makefile
+  main.c
 </pre>
 
 ```bash
-mkdir -p myapp/api/helloworld
+mkdir -p helloworld
 ```
 
 ### Create a HelloWorld microservice in C
 
 ```bash
-nano myapp/api/helloworld/helloworld.c
+nano helloworld/helloworld.c
 ```
 
 ```c
@@ -126,7 +124,7 @@ void mdt_handler(mdt_service_t *s) {
 ```
 
 ```bash
-nano myapp/api/helloworld/main.c
+nano helloworld/main.c
 ```
 
 ```c
@@ -187,21 +185,21 @@ int main(int argc, char **argv) {
 ```
 
 ```bash
-nano myapp/api/helloworld/Makefile
+nano helloworld/Makefile
 ```
 
 ```makefile
 CC:=clang
 CFLAGS:=-std=gnu99 -D_MONGOOSE
-INCLUDES:=-I. -I../../../mongoose -I../../../microdevtools
+INCLUDES:=-I. -I../mongoose -I../microdevtools
 LDFLAGS:=-lapr-1 -laprutil-1 -ljson-c -lssl -lcrypto
-SRC:=../../../mongoose/mongoose.c ../../../microdevtools/microdevtools.c helloworld.c main.c
+SRC:=../mongoose/mongoose.c ../microdevtools/microdevtools.c helloworld.c main.c
 
 EXTRA_INCLUDES:=-I /usr/include/apr-1.0 -I/usr/include/json-c
 
-# EXTRA_INCLUDES:=-I../../../apr-2/include -I../../../json-c/include
-# EXTRA_LIBS:=-L../../../apr-2/lib -L../../../json-c/lib
-# LD_LIBRARY_LOAD:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib 
+# EXTRA_INCLUDES:=-I../apr-2/include -I../json-c/include
+# EXTRA_LIBS:=-L../apr-2/lib -L../json-c/lib
+# LD_LIBRARY_LOAD:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../apr-2/lib:../json-c/lib 
 # TLS:=-DMG_TLS=MG_TLS_OPENSSL -D_TLS
 
 RUN:=./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
@@ -219,12 +217,26 @@ ifdef dbd
 endif
 
 all:
+ifneq ($(wildcard fs.c),)
+	$(eval SRC:=$(SRC) fs.c)
+	$(eval CFLAGS:=$(CFLAGS) -DMG_ENABLE_PACKED_FS=1 -D_FS)
+endif
 	$(eval CFLAGS:=$(CFLAGS) -D_DAEMON $(TLS))
-	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(EXTRA_INCLUDES) $(LIBS) $(EXTRA_LIBS) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(EXTRA_INCLUDES) \
+	$(LIBS) $(EXTRA_LIBS) $(LDFLAGS)
 
 debug:
+ifneq ($(wildcard fs.c),)
+	$(eval SRC:=$(SRC) fs.c)
+	$(eval CFLAGS:=$(CFLAGS) -DMG_ENABLE_PACKED_FS=1 -D_FS)
+endif
 	$(eval CFLAGS:=$(CFLAGS) $(TLS) -g -D_DEBUG)
-	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(EXTRA_INCLUDES) $(LIBS) $(EXTRA_LIBS) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(EXTRA_INCLUDES) \
+	$(LIBS) $(EXTRA_LIBS) $(LDFLAGS)
+
+fs:
+	clang -o pack ../mongoose/test/pack.c
+	./pack	fs/* > fs.c
 
 run:
 	$(LD_LIBRARY_LOAD) $(RUN)
@@ -236,16 +248,16 @@ To use a different installation of apr and json-c, uncomment the following lines
 and set the correct path:
 
 ```makefile
-# EXTRA_INCLUDES:=-I../../../apr-2/include -I../../../json-c/include
-# EXTRA_LIBS:=-L../../../apr-2/lib -L../../../json-c/lib
-# LD_LIBRARY_LOAD:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib 
+# EXTRA_INCLUDES:=-I../apr-2/include -I../json-c/include
+# EXTRA_LIBS:=-L../apr-2/lib -L../json-c/lib
+# LD_LIBRARY_LOAD:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../apr-2/lib:../json-c/lib 
 # TLS:=-DMG_TLS=MG_TLS_OPENSSL -D_TLS
 ```
 
 ### Create a HelloWorld microservice in Objective-c
 
 ```bash
-nano myapp/api/helloworld/helloworld.m
+nano helloworld/helloworld.m
 ```
 
 ```c
@@ -267,7 +279,7 @@ void mdt_handler(mdt_service_t *s) {
 ```
 
 ```bash
-nano myapp/api/helloworld/main.m
+nano helloworld/main.m
 ```
 
 ```c
@@ -328,22 +340,22 @@ int main(int argc, char **argv) {
 ```
 
 ```bash
-nano myapp/api/helloworld/Makefile
+nano helloworld/Makefile
 ```
 
 ```makefile
 CC:=clang
 CFLAGS:=-D_MONGOOSE -D_NATIVE_OBJC_EXCEPTIONS -fconstant-string-class=NSConstantString
-INCLUDES:=-I. -I../../../mongoose -I../../../microdevtools -I `gnustep-config --variable=GNUSTEP_SYSTEM_HEADERS`
+INCLUDES:=-I. -I../mongoose -I../microdevtools -I `gnustep-config --variable=GNUSTEP_SYSTEM_HEADERS`
 LIBS:=-L `gnustep-config --variable=GNUSTEP_SYSTEM_LIBRARIES`
 LDFLAGS:=-lapr-1 -laprutil-1 -ljson-c -lssl -lcrypto -lgnustep-base -lobjc
-SRC:=../../../mongoose/mongoose.c ../../../microdevtools/microdevtools.c helloworld.m main.m
+SRC:=../mongoose/mongoose.c ../microdevtools/microdevtools.c helloworld.m main.m
 
 EXTRA_INCLUDES:=-I /usr/include/apr-1.0 -I/usr/include/json-c
 
-# EXTRA_INCLUDES:=-I../../../apr-2/include -I../../../json-c/include
-# EXTRA_LIBS:=-L../../../apr-2/lib -L../../../json-c/lib
-# LD_LIBRARY_LOAD:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib 
+# EXTRA_INCLUDES:=-I../apr-2/include -I../json-c/include
+# EXTRA_LIBS:=-L../apr-2/lib -L../json-c/lib
+# LD_LIBRARY_LOAD:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../apr-2/lib:../json-c/lib 
 # TLS:=-DMG_TLS=MG_TLS_OPENSSL -D_TLS
 
 RUN:=./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
@@ -361,12 +373,26 @@ ifdef dbd
 endif
 
 all:
+ifneq ($(wildcard fs.c),)
+	$(eval SRC:=$(SRC) fs.c)
+	$(eval CFLAGS:=$(CFLAGS) -DMG_ENABLE_PACKED_FS=1 -D_FS)
+endif
 	$(eval CFLAGS:=$(CFLAGS) -D_DAEMON $(TLS))
-	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(EXTRA_INCLUDES) $(LIBS) $(EXTRA_LIBS) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(EXTRA_INCLUDES) \
+	$(LIBS) $(EXTRA_LIBS) $(LDFLAGS)
 
 debug:
+ifneq ($(wildcard fs.c),)
+	$(eval SRC:=$(SRC) fs.c)
+	$(eval CFLAGS:=$(CFLAGS) -DMG_ENABLE_PACKED_FS=1 -D_FS)
+endif
 	$(eval CFLAGS:=$(CFLAGS) $(TLS) -g -D_DEBUG)
-	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(EXTRA_INCLUDES) $(LIBS) $(EXTRA_LIBS) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(EXTRA_INCLUDES) \
+	$(LIBS) $(EXTRA_LIBS) $(LDFLAGS)
+
+fs:
+	clang -o pack ../mongoose/test/pack.c
+	./pack	fs/* > fs.c
 
 run:
 	$(LD_LIBRARY_LOAD) $(RUN)
@@ -378,15 +404,15 @@ To use a different installation of apr and json-c, uncomment the following lines
 and set the correct path:
 
 ```makefile
-# EXTRA_INCLUDES:=-I../../../apr-2/include -I../../../json-c/include
-# EXTRA_LIBS:=-L../../../apr-2/lib -L../../../json-c/lib
-# LD_LIBRARY_LOAD:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../apr-2/lib:../../json-c/lib 
+# EXTRA_INCLUDES:=-I../apr-2/include -I../json-c/include
+# EXTRA_LIBS:=-L../apr-2/lib -L../json-c/lib
+# LD_LIBRARY_LOAD:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../apr-2/lib:../json-c/lib 
 ```
 
 ### Compile and run the HelloWorld microservice (debug version)
 
 ```bash
-cd myapp/api/helloworld && make debug && make run
+cd helloworld && make debug && make run
 ```
 
 <code>TEST HTTP</code>
@@ -398,7 +424,9 @@ curl -i "http://localhost:2310/api/helloworld"
 ### Connect to a PostgreSQL database
 
 ```bash
-sudo apt install postgresql && sudo systemctl start postgresql && sudo -u postgres psql
+sudo apt install postgresql \
+  && sudo systemctl start postgresql \
+  && sudo -u postgres psql
 ```
 
 ```sql
@@ -430,7 +458,7 @@ VALUES
 ```
 
 ```bash
-cd myapp/api/helloworld && make debug && make run dbd=pgsql
+cd helloworld && make debug && make run dbd=pgsql
 ```
 
 ### Connect to a MySQL/MariaDB database
@@ -466,13 +494,16 @@ INSERT INTO users (user, email, pass) VALUES
 ```
 
 ```bash
-cd myapp/api/helloworld && make debug && make run dbd=mysql
+cd helloworld \
+  && make debug \
+  && make run dbd=mysql
 ```
 
 ### Connect to a SQLite3 database
 
 ```bash
-sudo apt install sqlite3 && sqlite3 test.sqlite
+sudo apt install sqlite3 \
+  && sqlite3 test.sqlite
 ```
 
 ```sql
@@ -492,13 +523,15 @@ INSERT INTO users (username, email, pass) VALUES
 ```
 
 ```bash
-cd myapp/api/helloworld && make debug && make run dbd=sqlite3
+cd helloworld \
+  && make debug \
+  && make run dbd=sqlite3
 ```
 
 ### Enable TLS (optional)
 
 ```bash
-nano myapp/api/helloworld/certs.sh
+nano helloworld/certs.sh
 ```
 
 ```bash
@@ -709,6 +742,28 @@ sudo chown -R root:root /etc/systemd/system/helloworld.service \
 
 ```bash
 sudo systemctl start helloworld
+```
+
+### Make the microservice a startup script
+
+```bash
+sudo update-rc.d hello defaults
+```
+
+### Create a script to uninstall the microservice
+
+```bash
+nano uninstall.sh
+```
+
+```bash
+#!/bin/sh
+service helloworld stop \
+  && update-rc.d -f helloworld remove \
+  && rm -rf /etc/systemd/system/helloworld \
+  && rm -rf /usr/bin/helloworld \
+  && rm -rf /etc/init.d/helloworld \
+  && systemctl daemon-reload
 ```
 
 ### Create a simple Nginx API gateway

@@ -2220,6 +2220,20 @@ void mdt_http_request_handler(struct mg_connection *c, int ev, void *ev_data) {
       st.hm = (struct mg_http_message*)ev_data;
       st.flag.fn_data = c->fn_data != NULL;
       if ((st.error = !st.flag.fn_data)) break;
+      #ifdef _FS
+      if (((st.hm)->uri.len > 0) && (strncmp((st.hm)->uri.ptr, "/api/", 5))) {
+        struct mg_http_serve_opts opts = {0};
+        opts.root_dir = "/fs";
+        opts.page404 = "/fs/404.html";
+        opts.fs = &mg_fs_packed;
+        if (mg_http_match_uri(st.hm, "/")) {
+          mg_http_serve_file(c, st.hm, "/fs/main.html", &opts);
+        } else {
+          mg_http_serve_dir(c, st.hm, &opts);
+        }
+        break;
+      }
+      #endif
       // Server data
       st.server = (mdt_server_t*)c->fn_data;
       if (DEBUG) {
