@@ -744,13 +744,13 @@ sudo chown -R root:root /etc/systemd/system/helloworld.service \
 sudo systemctl start helloworld
 ```
 
-### Make the microservice a startup script
+Make the microservice a startup script:
 
 ```bash
 sudo update-rc.d hello defaults
 ```
 
-### Create a script to uninstall the microservice
+Create a script to uninstall the microservice:
 
 ```bash
 nano uninstall.sh
