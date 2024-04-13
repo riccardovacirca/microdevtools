@@ -629,7 +629,7 @@ sudo service nginx restart
 make debug && make run
 ```
 
-Add the remote.host host to the /etc/hosts file and run the following command from an external host:
+Add the <code>remote.host</code> host to the <code>/etc/hosts</code> file and run the following command from an external host:
 
 ```bash
 curl -i http://remote.host/api/helloworld
