@@ -578,8 +578,6 @@ curl -k -i "https://localhost:2443/api/helloworld"
 
 ### Create a simple Nginx API gateway
 
-<code>/etc/nginx/sites-available/myapp.conf</code>
-
 ```bash
 sudo nano /etc/nginx/sites-available/myapp.conf
 ```
@@ -596,8 +594,6 @@ server {
 }
 ```
 
-<code>/etc/nginx/sites-available/myapp_hello_location.conf</code>
-
 ```bash
 sudo nano /etc/nginx/sites-available/myapp_hello_location.conf
 ```
@@ -608,8 +604,6 @@ location /api/helloworld/ {
   proxy_pass http://myapp-helloworld;
 }
 ```
-
-<code>/etc/nginx/sites-available/myapp_*_upstream.conf</code>
 
 ```bash
 sudo nano /etc/nginx/sites-available/myapp_*_upstream.conf
