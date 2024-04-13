@@ -497,7 +497,9 @@ cd myapp/api/helloworld && make debug && make run dbd=sqlite3
 
 ### Enable TLS
 
-Create and run a <code>myapp/api/helloworld/cert.sh</code> bash script:
+```bash
+nano myapp/api/helloworld/certs.sh
+```
 
 ```bash
 #!/bin/bash
@@ -555,7 +557,7 @@ echo -e "#endif /* CERT_H */" >> certs.h
 ```
 
 ```bash
-chmod +x cert.sh && ./cert.sh helloworld
+chmod +x certs.sh && ./certs.sh helloworld
 ```
 
 Uncomment the following line in the service Makefile:
@@ -595,7 +597,7 @@ server {
 ```
 
 ```bash
-sudo nano /etc/nginx/sites-available/myapp_hello_location.conf
+sudo nano /etc/nginx/sites-available/myapp_helloworld_location.conf
 ```
 
 ```
@@ -606,7 +608,7 @@ location /api/helloworld/ {
 ```
 
 ```bash
-sudo nano /etc/nginx/sites-available/myapp_*_upstream.conf
+sudo nano /etc/nginx/sites-available/myapp_helloworld_upstream.conf
 ```
 
 ```nginx
