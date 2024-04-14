@@ -2,9 +2,9 @@
 
 Microservices DevTools
 
-#### Table of Contents
+<!-- #### Table of Contents
 
-[Install system dependencies](#install-system-dependencies)<br>
+[Install](#install)<br>
 [Create a new microservices-based project](#create-a-new-microservices-based-project)<br>
 [Install GNUstep OBJ-C support (optional)](#install-gnustep-obj-c-support-optional)<br>
 [Create a new microservices-based project](#create-a-new-microservices-based-project)<br>
@@ -20,41 +20,31 @@ Microservices DevTools
 [Connect to a SQLite3 database](#connect-to-a-sqlite3-database)<br>
 [Enable TLS](#enable-tls)<br>
 [Create a simple Nginx API gateway](#create-a-simple-nginx-api-gateway)<br>
-
-### Install system dependencies
+ -->
+## Install
 
 ```bash
-sudo apt install clang make curl git python autoconf libtool-bin libexpat1-dev \
-                 cmake libssl-dev libmariadb-dev libpq-dev libsqlite3-dev \
-                 unixodbc-dev libapr1-dev libaprutil1-dev libaprutil1-dbd-mysql \
-                 libaprutil1-dbd-pgsql libaprutil1-dbd-sqlite3 libjson-c-dev
+sudo apt install \
+  clang make curl git python autoconf libtool-bin libexpat1-dev \
+  cmake libssl-dev libmariadb-dev libpq-dev libsqlite3-dev \
+  unixodbc-dev libapr1-dev libaprutil1-dev libaprutil1-dbd-mysql \
+  libaprutil1-dbd-pgsql libaprutil1-dbd-sqlite3 libjson-c-dev
 ```
-
-### Install GNUstep OBJ-C support (optional)
-
+```bash
+git clone https://github.com/cesanta/mongoose.git mongoose
+```
+```bash
+git clone https://github.com/riccardovacirca/microdevtools.git microdevtools
+```
+<!-- #### GNUstep OBJ-C support (optional)
 ```bash
 sudo apt install gnustep-devel gobjc \
   && ln -s /usr/lib/gcc/x86_64-linux-gnu/10/include/objc /usr/local/include/objc
 ```
-
-### Get the latest version of Mongoose
-
-```bash
-git clone https://github.com/cesanta/mongoose.git mongoose
-```
-
-### Get latest version of MicroDevTools
-
-```bash
-git clone https://github.com/riccardovacirca/microdevtools.git microdevtools
-```
-
-### Get the latest verison of Apache Portable Runtime (optional)
-
+### The latest verison of Apache Portable Runtime (optional)
 ```bash
 git clone https://github.com/apache/apr.git apr
 ```
-
 ```bash
 mkdir -p apr-2 \
   && cd apr \
@@ -67,13 +57,10 @@ mkdir -p apr-2 \
   && rm -rf /tmp/apr \
   && cd ..
 ```
-
-### Get the latest version of JSON-c (optional)
-
+#### The latest version of JSON-c (optional)
 ```bash
 git clone https://github.com/json-c/json-c.git json-c
 ```
-
 ```bash
 mkdir -p json-c \
   && mkdir jsonc \
@@ -87,27 +74,11 @@ mkdir -p json-c \
   && cd .. \
   && rm -rf jsonc /tmp/jsonc
 ```
-
-### Create a new microservices-based project
-#### Project structure
-
-<pre>mongoose/
-microdevtools/
-helloworld/
-  Makefile
-  main.c
-</pre>
-
+-->
+## Create a microservice
 ```bash
-mkdir -p helloworld
+mkdir -p helloworld && nano helloworld/helloworld.c
 ```
-
-### Create a HelloWorld microservice in C
-
-```bash
-nano helloworld/helloworld.c
-```
-
 ```c
 #include "microdevtools.h"
 
@@ -122,11 +93,9 @@ void mdt_handler(mdt_service_t *s) {
   mdt_route(s, "GET", "/api/helloworld", HelloWorldController);
 }
 ```
-
 ```bash
 nano helloworld/main.c
 ```
-
 ```c
 #include "microdevtools.h"
 
@@ -183,12 +152,31 @@ int main(int argc, char **argv) {
   return 0;
 }
 ```
-
 ```bash
 nano helloworld/Makefile
 ```
-
 ```makefile
+CC:=clang
+CFLAGS:=-std=gnu99 -D_MONGOOSE
+INCLUDES:=-I. -I../mongoose -I../microdevtools -I /usr/include/apr-1.0 -I/usr/include/json-c
+LDFLAGS:=-lapr-1 -laprutil-1 -ljson-c -lssl -lcrypto
+SRC:=../mongoose/mongoose.c ../microdevtools/microdevtools.c helloworld.c main.c
+
+all:
+	$(eval CFLAGS:=$(CFLAGS) -D_DAEMON)
+	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
+
+debug:
+	$(eval CFLAGS:=$(CFLAGS) -g -D_DEBUG)
+	$(CC) $(CFLAGS) -o helloworld $(SRC) $(INCLUDES) $(LIBS) $(LDFLAGS)
+
+run:
+	./helloworld -h 0.0.0.0 -p 2310 -P 2443 -l helloworld.log
+
+.PHONY: all debug run
+```
+
+<!-- ```makefile
 CC:=clang
 CFLAGS:=-std=gnu99 -D_MONGOOSE
 INCLUDES:=-I. -I../mongoose -I../microdevtools
@@ -242,8 +230,8 @@ run:
 	$(LD_LIBRARY_LOAD) $(RUN)
 
 .PHONY: all debug run
-```
-
+``` -->
+<!-- 
 To use a different installation of apr and json-c, uncomment the following lines
 and set the correct path:
 
@@ -407,21 +395,18 @@ and set the correct path:
 # EXTRA_INCLUDES:=-I../apr-2/include -I../json-c/include
 # EXTRA_LIBS:=-L../apr-2/lib -L../json-c/lib
 # LD_LIBRARY_LOAD:=LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../apr-2/lib:../json-c/lib 
-```
+``` -->
 
-### Compile and run the HelloWorld microservice (debug version)
-
+## Make and run
 ```bash
 cd helloworld && make debug && make run
 ```
-
 <code>TEST HTTP</code>
-
 ```bash
 curl -i "http://localhost:2310/api/helloworld"
 ```
 
-### Connect to a PostgreSQL database
+<!-- ### Connect to a PostgreSQL database
 
 ```bash
 sudo apt install postgresql \
@@ -821,4 +806,4 @@ Add the <code>remote.host</code> host to the <code>/etc/hosts</code> file and ru
 
 ```bash
 curl -i http://remote.host/api/helloworld
-```
+``` -->
