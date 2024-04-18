@@ -2113,7 +2113,7 @@ apr_table_t* mdt_http_request_cookies_parse(apr_pool_t *mp, struct mg_http_messa
 apr_table_t* mdt_http_query_string_parse(apr_pool_t*mp, struct mg_http_message *hm) {
   apr_table_t *result = NULL;
   if (hm->query.len > 0) {
-    const char *query = mdt_str(mp, hm->query.ptr, hm->query.len);
+    const char *query = mdt_str(mp, hm->query.buf, hm->query.len);
     result = mdt_http_request_args_parse(mp, query, "&", "=");
   }
   return result;
@@ -2122,7 +2122,7 @@ apr_table_t* mdt_http_query_string_parse(apr_pool_t*mp, struct mg_http_message *
 apr_table_t* mdt_http_request_body_parse(apr_pool_t*mp, struct mg_http_message *hm) {
   apr_table_t *result = NULL;
   if (hm->body.len > 0) {
-    const char *body = mdt_str(mp, hm->body.ptr, hm->body.len);
+    const char *body = mdt_str(mp, hm->body.buf, hm->body.len);
     result = mdt_http_request_args_parse(mp, body, "&", "=");
   }
   return result;
@@ -2156,23 +2156,23 @@ int mdt_http_request_multipart_parse(apr_pool_t *mp, mdt_http_request_t *rq, str
     entry = apr_table_make(mp, 2);
     // Multipart files
     if ((int)part.filename.len > 0) {
-      fname = apr_psprintf(mp, "%.*s", (int)part.name.len, part.name.ptr);
+      fname = apr_psprintf(mp, "%.*s", (int)part.name.len, part.name.buf);
       forig = apr_psprintf(
-        mp, "%.*s", (int)part.filename.len, part.filename.ptr);
+        mp, "%.*s", (int)part.filename.len, part.filename.buf);
       fsize = (apr_size_t)part.body.len;
       fpath = apr_psprintf(mp, "%s/%s", "/tmp", forig);
       rv = mdt_file_open_truncate(&fd, fpath, mp);
       if (rv == APR_SUCCESS) {
-        fsize = mdt_file_write(fd, part.body.ptr, fsize);
+        fsize = mdt_file_write(fd, part.body.buf, fsize);
         apr_table_set(entry, "file_name", fname);
         apr_table_set(entry, "file_path", fpath);
       }
     }
     // Multipart arguments
     else {
-      char *key = apr_psprintf(mp, "%.*s", (int)part.name.len, part.name.ptr);
+      char *key = apr_psprintf(mp, "%.*s", (int)part.name.len, part.name.buf);
       apr_table_set(entry, "name", key);
-      char *val = apr_psprintf(mp, "%.*s", (int)part.body.len, part.body.ptr);
+      char *val = apr_psprintf(mp, "%.*s", (int)part.body.len, part.body.buf);
       apr_table_set(entry, "value", val);
     }
     APR_ARRAY_PUSH(rq->multipart_data, apr_table_t*) = entry;
@@ -2221,7 +2221,7 @@ void mdt_http_request_handler(struct mg_connection *c, int ev, void *ev_data) {
       st.flag.fn_data = c->fn_data != NULL;
       if ((st.error = !st.flag.fn_data)) break;
       #ifdef _FS
-      if (((st.hm)->uri.len > 0) && (strncmp((st.hm)->uri.ptr, "/api/", 5))) {
+      if (((st.hm)->uri.len > 0) && (strncmp((st.hm)->uri.buf, "/api/", 5))) {
         struct mg_http_serve_opts opts = {0};
         opts.root_dir = "/fs";
         opts.page404 = "/fs/404.html";
@@ -2286,14 +2286,14 @@ void mdt_http_request_handler(struct mg_connection *c, int ev, void *ev_data) {
       st.flag.method = (st.hm)->method.len > 0;
       if ((st.error = !st.flag.method)) break;
       sv->request->method = mdt_str(
-        st.pool, (st.hm)->method.ptr, (st.hm)->method.len);
+        st.pool, (st.hm)->method.buf, (st.hm)->method.len);
       if (DEBUG) {
         mdt_log((st.server)->logger, "INFO", "HTTP request method parsed");
       }
       // Request URI
       st.flag.uri = (st.hm)->uri.len > 0;
       if ((st.error = !st.flag.uri)) break;
-      sv->request->uri = mdt_str(st.pool, (st.hm)->uri.ptr, (st.hm)->uri.len);
+      sv->request->uri = mdt_str(st.pool, (st.hm)->uri.buf, (st.hm)->uri.len);
       if (DEBUG) {
         mdt_log((st.server)->logger, "INFO", "HTTP request uri parsed");
       }
@@ -2301,7 +2301,7 @@ void mdt_http_request_handler(struct mg_connection *c, int ev, void *ev_data) {
       if (strcmp(sv->request->method, "GET") == 0) {
         if ((st.hm)->query.len) {
           sv->request->query = mdt_str(
-            st.pool, (st.hm)->query.ptr, (st.hm)->query.len);
+            st.pool, (st.hm)->query.buf, (st.hm)->query.len);
           st.flag.query = sv->request->query != NULL;
           if ((st.error = !st.flag.query)) break;
           sv->request->args = mdt_http_query_string_parse(sv->pool, st.hm);
@@ -2316,7 +2316,7 @@ void mdt_http_request_handler(struct mg_connection *c, int ev, void *ev_data) {
       }
       // Request body
       if ((st.hm)->body.len) {
-        sv->request->body = mdt_str(st.pool, (st.hm)->body.ptr, (st.hm)->body.len);
+        sv->request->body = mdt_str(st.pool, (st.hm)->body.buf, (st.hm)->body.len);
         st.flag.body = sv->request->body != NULL;
         if ((st.error = !st.flag.body)) break;
         sv->request->args = mdt_http_request_body_parse(sv->pool, st.hm);
