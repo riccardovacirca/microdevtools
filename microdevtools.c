@@ -2060,11 +2060,11 @@ void mdt_http_request_headers_set(apr_pool_t *mp, mdt_http_request_t *rq, struct
     const char *key = NULL, *val = NULL;
     k = &hm->headers[i].name;
     if (k) {
-      key = apr_psprintf(mp, "%.*s", (int) k->len, k->ptr);  
+      key = apr_psprintf(mp, "%.*s", (int) k->len, k->buf);  
     }
     v = &hm->headers[i].value;
     if (v) {
-      val = apr_psprintf(mp, "%.*s", (int) v->len, v->ptr);
+      val = apr_psprintf(mp, "%.*s", (int) v->len, v->buf);
     }
     if (key && val) {
       apr_table_set(rq->headers, key, val);
@@ -2105,7 +2105,7 @@ apr_table_t* mdt_http_request_cookies_parse(apr_pool_t *mp, struct mg_http_messa
   apr_table_t *result = NULL;
   struct mg_str *cookies = mg_http_get_header(hm, "Cookie");
   if (cookies != NULL) {
-    result = mdt_http_request_args_parse(mp, cookies->ptr, ";", "=");
+    result = mdt_http_request_args_parse(mp, cookies->buf, ";", "=");
   }
   return result;
 }
