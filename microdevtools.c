@@ -5,9 +5,7 @@
 #include "certs.h"
 #endif
 
-/*
- * COMMON
- */
+// COMMONS
 
 int mdt_rand(int l, int h) {
   srand(time(NULL));

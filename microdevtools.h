@@ -41,13 +41,13 @@
 #include <openssl/buffer.h>
 #include <openssl/hmac.h>
 
+#include "mongoose.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/*
- * COMMON
- */
+// COMMONS
 
 #define MDT_MAX_READ_BUFFER 16384
 #define MDT_ERROR_TIMESTAMP (-1)
@@ -57,15 +57,6 @@ int mdt_is_empty(const char *s);
 int mdt_is_int(const char *s);
 int mdt_is_double(const char *s);
 int mdt_in_string(const char *s, const char *sub);
-/**
- * @brief 
- * @param p Memory pool
- * @param s The string to allocate
- * @param bf_size The size of the buffer
- * @return The pointer to the buffer
- * @note The returned string always has a NULL terminator
- *       and a size of at most bf_size-1 bytes
- */
 char* mdt_buffer(apr_pool_t *mp, const char *s, apr_size_t *bf_size);
 char* mdt_str(apr_pool_t *mp, const char *s, apr_size_t sz);
 char* mdt_trim(apr_pool_t *pool, const char *str);
@@ -96,18 +87,13 @@ apr_size_t mdt_file_read(apr_pool_t *mp, apr_file_t *fd, void **buf);
 apr_time_t mdt_timestamp(int year, int month, int day, int hour, int minute, int second);
 apr_time_t mdt_now();
 apr_table_entry_t* mdt_table_entry(apr_table_t *t, int i);
-// Legge i dati dallo standard input e li restituisce come una stringa.
-// 'm' è il pool di memoria da utilizzare per l'allocazione di eventuali risorse.
 char* mdt_pipein(apr_pool_t *mp);
 char* mdt_env(const char *e, apr_pool_t *mp);
 void mdt_daemonize();
 
-/*
- * JSON
- */
+// JSON
 
 #include "json.h"
-
 #define MDT_JSON_TRUE_S  "true"
 #define MDT_JSON_FALSE_S "false"
 #define MDT_JSON_NULL_S  "null"
@@ -148,17 +134,12 @@ typedef apr_array_header_t mdt_json_object_t;
 mdt_json_object_t* mdt_json_decode(apr_pool_t *mp, const char *s);
 const char* mdt_json_encode(apr_pool_t *mp, const void *obj, mdt_json_type_t t);
 
-/*
- * LOGGER
- */
+// LOGGER
 
 #define MDT_LOG_MAX_FILE_SIZE 500 * 1024 * 1024 /* (10MB) */
 #define MDT_LOG_MAX_MSG_SIZE 512
 #define MDT_LOG_MSG_FMT "[%s] [%s] [%05d] %s\r\n"
 
-/**
- * @brief Struttura del logger
- */
 typedef struct mdt_logger_t {
   apr_pool_t *pool;
   apr_file_t *fh;
@@ -188,9 +169,7 @@ void mdt_log_destroy(mdt_logger_t *l);
   }\
 } while (0)
 
-/*
- * DBD
- */
+// DBD
 
 typedef struct mdt_dbd_t {
   int err;
@@ -220,9 +199,7 @@ int mdt_dbd_close(mdt_dbd_t *dbd);
 const char* mdt_dbd_driver_name(mdt_dbd_t *dbd);
 const char* mdt_dbd_error(mdt_dbd_t *dbd);
 
-/*
- * HTTP REQUEST
- */
+// HTTP REQUEST
 
 typedef enum mdt_request_type_t {
   MDT_REQUEST_T_NONE,
@@ -271,9 +248,7 @@ mdt_http_request_t* mdt_http_request_alloc(apr_pool_t *mp);
 apr_table_t *mdt_http_request_validate_args(mdt_http_request_t *r, mdt_request_validator_t *vd, int nargs);
 apr_table_t *mdt_http_request_validate_multipart_args(mdt_http_request_t *r, mdt_request_validator_t *vd, int nargs);
 
-/*
- * HTTP RESPONSE
- */
+// HTTP RESPONSE
 
 typedef struct mdt_http_response_t {
   apr_pool_t *pool;
@@ -290,9 +265,7 @@ void mdt_http_response_hd_set(mdt_http_response_t *r, const char *k, const char 
 const char* mdt_http_response_hd_get(mdt_http_response_t *r, const char *k);
 void mdt_http_response_buffer_set(mdt_http_response_t *r, void *buf, apr_size_t sz);
 
-/*
- * SERVICE
- */
+// SERVICE
 
 typedef struct mdt_service_t {
   apr_pool_t *pool;
@@ -341,35 +314,6 @@ char* mdt_jwt_token_create(apr_pool_t *mp, apr_table_t *claims, const char *key)
 char* mdt_hmac_encode(const char *key, const char *s, apr_size_t sz);
 int mdt_jwt_token_validate(apr_pool_t *mp, const char *tok, const char *key);
 
-
-
-
-
-// -----------------------------------------------------------------------------
-
-
-#include "apr.h"
-#include "apr_pools.h"
-#include "apr_tables.h"
-#include "apr_strings.h"
-#include "apr_proc_mutex.h"
-#include "apr_dbd.h"
-
-#include "stdio.h"
-#include "errno.h"
-#include "time.h"
-#include "syscall.h"
-#include "unistd.h"
-#include "stdlib.h"
-#include "sys/types.h"
-#include "sys/stat.h"
-#include "sys/file.h"
-#include "string.h"
-#include "signal.h"
-
-#include "mongoose.h"
-#include "microdevtools.h"
-
 #ifdef _DEBUG
 #define DEBUG 1
 #else
@@ -403,7 +347,6 @@ typedef struct mdt_dbd_pool_t {
   apr_proc_mutex_t *mutex;
 } mdt_dbd_pool_t;
 
-
 typedef struct mdt_server_t {
   apr_pool_t *pool;
   const char *host;
@@ -420,10 +363,7 @@ typedef struct mdt_server_t {
   mdt_logger_t *logger;
 } mdt_server_t;
 
-
-
 typedef void(*sighd_t)(int s);
-
 
 mdt_server_t* mdt_server_alloc(apr_pool_t *mp);
 void mdt_server_destroy(mdt_server_t *s);
@@ -448,9 +388,20 @@ int mdt_server_init(apr_pool_t *mp, mdt_server_t **s, int argc, char *argv[], ch
 extern mdt_dbd_pool_t *dbd_pool;
 
 
-// #ifndef _MDT_PDF
-// #define _MDT_PDF
-// #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #ifdef _MDT_PDF
 
