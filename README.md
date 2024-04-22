@@ -1665,6 +1665,93 @@ main "$@"
 
 
 
+-------------------------------------------------------
+#include "microdevtools.h"
+
+#define SECRET_KEY "my_secret_key"
+
+int SignInController(mdt_service_t *s) {
+
+  struct state_t {
+    struct flag_t {
+      int ok_request, ok_rset, ok_user, ok_token, ok_cookies;
+    } flag;
+    int error;
+  } st = {
+    .flag.ok_request = 0, .flag.ok_user = 0, .flag.ok_token = 0,
+    .flag.ok_cookies = 0, .error = 1
+  };
+
+  do {
+    apr_table_t *user, *valid_req;
+    const char *id, *username, *token, *cookies;
+    const char sql[] = "select id, username from users where username=%s and password=%s";
+    apr_array_header_t *rset;
+    mdt_request_validator_t v[2] = {
+      {"username", MDT_REQUEST_T_STRING, MDT_REQUEST_F_NONE},
+      {"password", MDT_REQUEST_T_STRING, MDT_REQUEST_F_MD5},
+    };
+
+    valid_req = mdt_http_request_validate_args(s->request, v, 2);
+    st.flag.ok_request = mdt_table_nelts(valid_req) == 2;
+    if (!st.flag.ok_request) break;
+
+    rset = mdt_dbd_prepared_select(s->pool, s->dbd, sql, valid_req);
+    st.flag.ok_rset = s->dbd->err <= 0;
+    if (!st.flag.ok_rset) break;
+
+    st.flag.ok_user = rset != NULL && rset->nelts > 0;
+    if (!st.flag.ok_user) break;
+    user = mdt_dbd_record(rset, 0);
+    st.flag.ok_user = user != NULL;
+    if (!st.flag.ok_user) break;
+
+    id = apr_table_get(user, "id");
+    username = apr_table_get(user, "username");
+    mdt_printf(s, "%s %s\n", id, username);
+
+    token = mdt_jwt_token_create(s->pool, user, SECRET_KEY);
+    st.flag.ok_token = token != NULL;
+    if (!st.flag.ok_token) break;
+
+    cookies = apr_psprintf(s->pool, "access_token=%s Path=/", (const char*)token);
+    st.flag.ok_cookies = cookies != NULL;
+    if (!st.flag.ok_cookies) break;
+    mdt_http_response_hd_set(s->response, "Set-Cookie", (const char*)cookies);
+
+    st.error = 0;
+  } while (0);
+  
+  if (st.error) {
+    if (!st.flag.ok_request) {
+      mdt_printf(s, "%s\n", "Invalid request.");
+    } else if (!st.flag.ok_rset) {
+      mdt_printf(s, "%s %d\n", s->dbd->er_msg != NULL ? s->dbd->er_msg : "DBD error.", s->dbd->err);
+    } else if (!st.flag.ok_user) {
+      mdt_printf(s, "%s\n", "User not found.");
+    } else if (!st.flag.ok_token) {
+      mdt_printf(s, "%s\n", "JWT token error.");
+    } else if (!st.flag.ok_cookies) {
+      mdt_printf(s, "%s\n", "Cookies error.");
+    } else {
+      mdt_printf(s, "%s\n", "General error.");
+    }
+  }
+
+  return 200;
+}
+
+int HelloController(mdt_service_t *s) {
+  mdt_http_response_hd_set(s->response, "Content-Type", "text/plain");
+  const char *msg = apr_pstrdup(s->pool, "Hello, World!");
+  mdt_printf(s, "%s\n", msg);
+  return 200;
+}
+
+void mdt_handler(mdt_service_t *s) {
+  mdt_route(s, "GET", "/api/hello", HelloController);
+  mdt_route(s, "POST", "/api/signin", SignInController);
+}
 
 
 
