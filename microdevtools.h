@@ -378,7 +378,7 @@ apr_table_t* mdt_http_request_args_parse(apr_pool_t *mp, const char *s, const ch
 apr_table_t* mdt_http_request_cookies_parse(apr_pool_t *mp, struct mg_http_message *hm);
 apr_table_t* mdt_http_query_string_parse(apr_pool_t*mp, struct mg_http_message *hm);
 apr_table_t* mdt_http_request_body_parse(apr_pool_t*mp, struct mg_http_message *hm);
-void mdt_signal_exit(int signum);
+extern void mdt_signal_exit(int signum);
 void mdt_signal_handler(struct sigaction *sig_action, sighd_t cb);
 int mdt_http_request_multipart_parse(apr_pool_t *mp, mdt_http_request_t *rq, struct mg_connection *c, struct mg_http_message *hm);
 void mdt_http_request_handler(struct mg_connection *c, int ev, void *ev_data);
