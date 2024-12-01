@@ -3,7 +3,6 @@
 Microservices DevTools
 
 <!-- #### Table of Contents
-
 [Install](#install)<br>
 [Create a new microservices-based project](#create-a-new-microservices-based-project)<br>
 [Install GNUstep OBJ-C support (optional)](#install-gnustep-obj-c-support-optional)<br>
