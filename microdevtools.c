@@ -5,7 +5,7 @@
 #include "certs.h"
 #endif
 
-// COMMONS
+// COMMONS FUNCTIONS
 
 int mdt_rand(int l, int h) {
   srand(time(NULL));
